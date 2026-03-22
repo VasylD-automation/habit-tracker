@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Трекер звичок</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#ffffff;
+  --bg2:#f5f5f3;
+  --bg3:#efefec;
+  --text:#1a1a18;
+  --text2:#6b6b67;
+  --text3:#9b9b96;
+  --border:rgba(0,0,0,0.12);
+  --border2:rgba(0,0,0,0.22);
+  --green:#1D9E75;
+  --green-dark:#0F6E56;
+  --blue:#378ADD;
+  --blue-dark:#0C447C;
+  --red:#E24B4A;
+  --radius:8px;
+  --radius-lg:12px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1a;
+    --bg2:#262624;
+    --bg3:#2e2e2c;
+    --text:#f0f0ec;
+    --text2:#9b9b96;
+    --text3:#6b6b67;
+    --border:rgba(255,255,255,0.12);
+    --border2:rgba(255,255,255,0.22);
+  }
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:var(--bg3);
+  color:var(--text);
+  min-height:100vh;
+  padding:1.5rem 1rem;
+}
+.container{max-width:960px;margin:0 auto}
+h1{
+  font-size:20px;
+  font-weight:500;
+  margin-bottom:1.5rem;
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+h1 span{font-size:22px}
+.card{
+  background:var(--bg);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:1.25rem;
+  margin-bottom:1rem;
+}
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-bottom:1.25rem;
+  flex-wrap:wrap;
+  gap:10px;
+}
+.month-nav{display:flex;align-items:center;gap:8px}
+.month-nav button{
+  background:none;
+  border:0.5px solid var(--border2);
+  border-radius:var(--radius);
+  padding:5px 12px;
+  cursor:pointer;
+  font-size:14px;
+  color:var(--text);
+}
+.month-nav button:hover{background:var(--bg2)}
+.month-label{
+  font-size:15px;
+  font-weight:500;
+  min-width:140px;
+  text-align:center;
+  color:var(--text);
+}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.btn{
+  background:none;
+  border:0.5px solid var(--border2);
+  border-radius:var(--radius);
+  padding:5px 12px;
+  cursor:pointer;
+  font-size:12px;
+  color:var(--text2);
+  white-space:nowrap;
+}
+.btn:hover{background:var(--bg2);color:var(--text)}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;min-width:560px;width:100%}
+th{
+  font-size:11px;
+  color:var(--text3);
+  font-weight:400;
+  padding:4px 0;
+  text-align:center;
+  border-bottom:0.5px solid var(--border);
+}
+th.today-th{color:var(--blue);font-weight:500}
+.habit-name{
+  font-size:12px;
+  color:var(--text);
+  padding:4px 8px 4px 0;
+  white-space:nowrap;
+  max-width:160px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  cursor:pointer;
+  user-select:none;
+}
+.habit-name:hover{color:var(--blue)}
+td.day-cell{padding:1px;text-align:center}
+.cell{
+  width:20px;
+  height:20px;
+  border-radius:4px;
+  border:0.5px solid var(--border);
+  cursor:pointer;
+  background:var(--bg);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:background 0.1s, border-color 0.1s;
+}
+.cell:hover{border-color:var(--border2);background:var(--bg2)}
+.cell.done{background:var(--green);border-color:var(--green-dark)}
+.cell.today-col{border-color:var(--blue)}
+.cell.done.today-col{background:var(--green);border-color:var(--green-dark)}
+.section-header td{
+  padding:10px 0 3px;
+  font-size:10px;
+  font-weight:500;
+  color:var(--text3);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  border-top:0.5px solid var(--border);
+}
+.section-header:first-child td{border-top:none;padding-top:4px}
+.add-row td{padding:8px 0 2px}
+.add-btn{
+  background:none;
+  border:0.5px dashed var(--border2);
+  border-radius:var(--radius);
+  padding:4px 12px;
+  cursor:pointer;
+  font-size:12px;
+  color:var(--text2);
+}
+.add-btn:hover{border-color:var(--text2);color:var(--text)}
+.streak{font-size:10px;color:var(--green);padding-left:4px}
+.del-habit{
+  font-size:10px;
+  color:var(--text3);
+  cursor:pointer;
+  padding:0 4px;
+  opacity:0;
+  transition:opacity 0.1s;
+}
+tr:hover .del-habit{opacity:1}
+.del-habit:hover{color:var(--red)}
+.today-dot{
+  width:5px;height:5px;
+  border-radius:50%;
+  background:var(--blue);
+  display:inline-block;
+  margin-left:3px;
+  vertical-align:middle;
+}
+.modal-bg{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0.4);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:100;
+}
+.modal{
+  background:var(--bg);
+  border:0.5px solid var(--border2);
+  border-radius:var(--radius-lg);
+  padding:1.5rem;
+  width:min(320px,92vw);
+}
+.modal h3{font-size:15px;font-weight:500;margin-bottom:14px;color:var(--text)}
+.modal input,.modal select{
+  width:100%;
+  border:0.5px solid var(--border2);
+  border-radius:var(--radius);
+  padding:8px 10px;
+  font-size:13px;
+  background:var(--bg);
+  color:var(--text);
+  margin-bottom:10px;
+  outline:none;
+}
+.modal input:focus,.modal select:focus{border-color:var(--blue)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.modal-btns button{
+  padding:7px 16px;
+  border-radius:var(--radius);
+  font-size:13px;
+  cursor:pointer;
+  border:0.5px solid var(--border2);
+  background:none;
+  color:var(--text);
+}
+.modal-btns button.primary{
+  background:var(--green);
+  border-color:var(--green-dark);
+  color:#fff;
+}
+.modal-btns button.primary:hover{background:var(--green-dark)}
+.stats{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
+  gap:10px;
+  margin-bottom:1rem;
+}
+.stat{
+  background:var(--bg2);
+  border-radius:var(--radius);
+  padding:0.75rem 1rem;
+  text-align:center;
+}
+.stat-val{font-size:22px;font-weight:500;color:var(--text)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1><span>✅</span> Трекер звичок</h1>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="card">
+    <div class="header">
+      <div class="month-nav">
+        <button id="prev">←</button>
+        <span class="month-label" id="month-label"></span>
+        <button id="next">→</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="today-btn">Сьогодні</button>
+        <button class="btn" id="export-btn">Експорт CSV</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="tracker-table"></table>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal" style="display:none">
+  <div class="modal">
+    <h3 id="modal-title">Нова звичка</h3>
+    <input type="text" id="habit-input" placeholder="Назва звички..." maxlength="60"/>
+    <select id="habit-section">
+      <option value="Ранок">Ранок</option>
+      <option value="День">День</option>
+      <option value="Вечір">Вечір</option>
+      <option value="Інше">Інше</option>
+    </select>
+    <div class="modal-btns">
+      <button id="modal-cancel">Скасувати</button>
+      <button class="primary" id="modal-save">Зберегти</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'habit_tracker_v1';
+const MONTHS_UA = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
+const today = new Date();
+
+const DEFAULT_HABITS = [
+  {id:'h1',name:'Сон',section:'Ранок'},
+  {id:'h2',name:'Зарядка',section:'Ранок'},
+  {id:'h3',name:'Вправи на очі',section:'Ранок'},
+  {id:'h4',name:'Ранкові процедури',section:'Ранок'},
+  {id:'h5',name:'Читання книжки',section:'Ранок'},
+  {id:'h6',name:'Англійська',section:'Ранок'},
+  {id:'h7',name:'НЕ потрібне в телефоні',section:'Ранок'},
+  {id:'h8',name:'Робота',section:'День'},
+  {id:'h9',name:'Вправи',section:'День'},
+  {id:'h10',name:'Час з Марком',section:'День'},
+  {id:'h11',name:'Сімейна допомога',section:'День'},
+  {id:'h12',name:'Серіали / фільми',section:'Вечір'},
+  {id:'h13',name:'Сімейні дозвілля',section:'Вечір'},
+  {id:'h14',name:'Приготування їжі',section:'Вечір'},
+];
+
+let state = {
+  habits: DEFAULT_HABITS,
+  done: {},
+  viewYear: today.getFullYear(),
+  viewMonth: today.getMonth()
+};
+
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      state.habits = saved.habits || DEFAULT_HABITS;
+      state.done = saved.done || {};
+    }
+  } catch(e) {}
+  render();
+}
+
+function save() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({habits: state.habits, done: state.done}));
+  } catch(e) {}
+}
+
+function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
+function cellKey(hid, y, m, d) { return `${hid}_${y}_${m}_${d}`; }
+
+function getStreak(hid) {
+  let streak = 0;
+  let d = new Date(today);
+  while (true) {
+    const k = cellKey(hid, d.getFullYear(), d.getMonth(), d.getDate());
+    if (!state.done[k]) break;
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+}
+
+function sections() {
+  const order = ['Ранок','День','Вечір','Інше'];
+  const map = {};
+  state.habits.forEach(h => {
+    const s = h.section || 'Інше';
+    if (!map[s]) map[s] = [];
+    map[s].push(h);
+  });
+  return order.filter(s => map[s] && map[s].length > 0).map(s => ({name: s, habits: map[s]}));
+}
+
+function renderStats() {
+  const y = state.viewYear, m = state.viewMonth;
+  const days = daysInMonth(y, m);
+  const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
+  const isCurrent = (y === todayY && m === todayM);
+  const maxDay = isCurrent ? todayD : days;
+
+  let totalPossible = 0, totalDone = 0, bestStreak = 0;
+  state.habits.forEach(h => {
+    for (let d = 1; d <= maxDay; d++) {
+      totalPossible++;
+      if (state.done[cellKey(h.id, y, m, d)]) totalDone++;
+    }
+    const s = getStreak(h.id);
+    if (s > bestStreak) bestStreak = s;
+  });
+
+  const pct = totalPossible > 0 ? Math.round(totalDone / totalPossible * 100) : 0;
+
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="stat-val">${totalDone}</div><div class="stat-lbl">Виконано цього місяця</div></div>
+    <div class="stat"><div class="stat-val">${pct}%</div><div class="stat-lbl">Відсоток виконання</div></div>
+    <div class="stat"><div class="stat-val">${bestStreak}</div><div class="stat-lbl">Найкращий стрік (днів)</div></div>
+  `;
+}
+
+function render() {
+  renderStats();
+  const y = state.viewYear, m = state.viewMonth;
+  const days = daysInMonth(y, m);
+  document.getElementById('month-label').textContent = MONTHS_UA[m] + ' ' + y;
+  const todayD = today.getDate(), todayM = today.getMonth(), todayY = today.getFullYear();
+  const isCurrentMonth = (y === todayY && m === todayM);
+
+  let html = '<tr><th style="text-align:left;padding-left:0;min-width:140px">Звичка</th>';
+  for (let d = 1; d <= days; d++) {
+    const isTod = isCurrentMonth && d === todayD;
+    html += `<th class="${isTod ? 'today-th' : ''}">${d}${isTod ? '<span class="today-dot"></span>' : ''}</th>`;
+  }
+  html += '</tr>';
+
+  sections().forEach(sec => {
+    html += `<tr class="section-header"><td colspan="${days+1}">${sec.name}</td></tr>`;
+    sec.habits.forEach(h => {
+      const streak = getStreak(h.id);
+      html += `<tr data-hid="${h.id}">`;
+      html += `<td><span class="habit-name" onclick="editHabit('${h.id}')" title="${h.name}">${h.name}</span>`;
+      if (streak > 1) html += `<span class="streak">${streak}д</span>`;
+      html += `<span class="del-habit" onclick="deleteHabit('${h.id}')" title="Видалити">✕</span></td>`;
+      for (let d = 1; d <= days; d++) {
+        const k = cellKey(h.id, y, m, d);
+        const done = !!state.done[k];
+        const isTod = isCurrentMonth && d === todayD;
+        html += `<td class="day-cell"><div class="cell${done ? ' done' : ''}${isTod ? ' today-col' : ''}" onclick="toggle('${h.id}',${d})"></div></td>`;
+      }
+      html += '</tr>';
+    });
+  });
+
+  html += `<tr class="add-row"><td colspan="${days+1}"><button class="add-btn" onclick="openModal()">+ Додати звичку</button></td></tr>`;
+  document.getElementById('tracker-table').innerHTML = html;
+}
+
+window.toggle = function(hid, d) {
+  const k = cellKey(hid, state.viewYear, state.viewMonth, d);
+  state.done[k] = !state.done[k];
+  if (!state.done[k]) delete state.done[k];
+  save(); render();
+};
+
+window.deleteHabit = function(hid) {
+  if (!confirm('Видалити звичку? Відмічені дні збережуться.')) return;
+  state.habits = state.habits.filter(h => h.id !== hid);
+  save(); render();
+};
+
+let editingId = null;
+window.editHabit = function(hid) { openModal(hid); };
+
+window.openModal = function(hid) {
+  editingId = hid || null;
+  const h = hid ? state.habits.find(x => x.id === hid) : null;
+  document.getElementById('modal-title').textContent = h ? 'Редагувати звичку' : 'Нова звичка';
+  document.getElementById('habit-input').value = h ? h.name : '';
+  document.getElementById('habit-section').value = h ? h.section : 'Ранок';
+  document.getElementById('modal').style.display = 'flex';
+  setTimeout(() => document.getElementById('habit-input').focus(), 50);
+};
+
+document.getElementById('modal-cancel').onclick = () => { document.getElementById('modal').style.display = 'none'; };
+document.getElementById('modal').onclick = function(e) { if (e.target === this) this.style.display = 'none'; };
+
+document.getElementById('modal-save').onclick = () => {
+  const name = document.getElementById('habit-input').value.trim();
+  if (!name) return;
+  const section = document.getElementById('habit-section').value;
+  if (editingId) {
+    const h = state.habits.find(x => x.id === editingId);
+    if (h) { h.name = name; h.section = section; }
+  } else {
+    state.habits.push({id: 'h' + Date.now(), name, section});
+  }
+  document.getElementById('modal').style.display = 'none';
+  save(); render();
+};
+
+document.getElementById('habit-input').onkeydown = function(e) {
+  if (e.key === 'Enter') document.getElementById('modal-save').click();
+};
+
+document.getElementById('prev').onclick = () => {
+  state.viewMonth--;
+  if (state.viewMonth < 0) { state.viewMonth = 11; state.viewYear--; }
+  render();
+};
+document.getElementById('next').onclick = () => {
+  state.viewMonth++;
+  if (state.viewMonth > 11) { state.viewMonth = 0; state.viewYear++; }
+  render();
+};
+document.getElementById('today-btn').onclick = () => {
+  state.viewYear = today.getFullYear();
+  state.viewMonth = today.getMonth();
+  render();
+};
+
+document.getElementById('export-btn').onclick = () => {
+  const y = state.viewYear, m = state.viewMonth;
+  const days = daysInMonth(y, m);
+  let csv = 'Звичка,' + Array.from({length: days}, (_, i) => i+1).join(',') + '\n';
+  state.habits.forEach(h => {
+    csv += '"' + h.name + '"';
+    for (let d = 1; d <= days; d++) {
+      csv += ',' + (state.done[cellKey(h.id, y, m, d)] ? '1' : '0');
+    }
+    csv += '\n';
+  });
+  const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `звички_${y}_${m+1}.csv`; a.click();
+  URL.revokeObjectURL(url);
+};
+
+load();
+</script>
+</body>
+</html>
