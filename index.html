@@ -1,502 +1,275 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Трекер звичок</title>
+<meta name="theme-color" content="#11734f">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Звички">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#ffffff;
-  --bg2:#f5f5f3;
-  --bg3:#efefec;
-  --text:#1a1a18;
-  --text2:#6b6b67;
-  --text3:#9b9b96;
-  --border:rgba(0,0,0,0.12);
-  --border2:rgba(0,0,0,0.22);
-  --green:#1D9E75;
-  --green-dark:#0F6E56;
-  --blue:#378ADD;
-  --blue-dark:#0C447C;
-  --red:#E24B4A;
-  --radius:8px;
-  --radius-lg:12px;
+/* VOICE: спокійний, особистий, без оцінок — аркуш, а не іспит
+   IDEA: паперова таблиця звичок у клітинку, як його Excel
+   PICTURE: сама сітка днів і галочок, одразу під заголовком
+   COLOUR and TYPE: білий аркуш, чорнило, глибокий зелений для галочок; Manrope
+   LAYOUT: заголовок, панель днів, сітка; на телефоні 4 дні без прокрутки */
+:root{color-scheme:light dark;
+--bg:light-dark(#f4f3ef,#121412);--paper:light-dark(#ffffff,#1b1e1c);--ink:light-dark(#17191a,#eceeea);
+--muted:light-dark(#5a5f5c,#a3aaa5);--line:light-dark(#dcdcd6,#323733);--line2:light-dark(#b9bab3,#4a514c);
+--ok:light-dark(#11734f,#3fb984);--okInk:#ffffff;--today:light-dark(#e8f3ee,#1f2e27);--sec:light-dark(#0e5a3f,#7fd3ab)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,40px) max(4vw,12px)}
+h1{font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0;font-weight:800;text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 18px;font-size:15px}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+button{font:inherit;color:inherit}
+.seg button,.btn{background:var(--paper);border:0;padding:0 14px;min-height:44px;cursor:pointer;font-size:15px;font-weight:600}
+.seg button+button{border-left:1px solid var(--line2)}
+.seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
+.btn{border:1px solid var(--line2);border-radius:10px}
+.btn:focus-visible,.seg button:focus-visible,.cell:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+.range{font-weight:700;padding:0 6px;white-space:nowrap}
+.sp{flex:1}
+.status{font-size:13px;color:var(--muted);margin:0 0 10px}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;width:100%}
+th,td{border-bottom:1px solid var(--line);padding:0}
+thead th{font-size:13px;color:var(--muted);font-weight:600;padding:10px 2px 8px;text-align:center;white-space:nowrap;position:sticky;top:0;background:var(--paper)}
+thead th b{display:block;color:var(--ink);font-size:16px}
+th.today,td.today{background:var(--today)}
+thead th.today b{color:var(--ok)}
+.name{position:sticky;left:0;background:var(--paper);text-align:left;padding:6px 10px 6px 14px;font-size:15px;font-weight:600;min-width:150px;max-width:220px;border-right:1px solid var(--line)}
+thead .name{z-index:2}
+tr.secrow td{background:var(--bg);color:var(--sec);font-size:13px;font-weight:800;padding:12px 14px 6px;border-bottom:1px solid var(--line)}
+tr.secrow td.name{background:var(--bg)}
+td.c{text-align:center;padding:4px 3px}
+.cell{width:40px;height:40px;border-radius:9px;border:1.5px solid var(--line2);background:transparent;cursor:pointer;display:inline-grid;place-items:center;transition:background .12s,transform .12s}
+.cell[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:var(--okInk)}
+.cell svg{width:20px;height:20px;opacity:0}
+.cell[aria-pressed=true] svg{opacity:1}
+@media(prefers-reduced-motion:no-preference){.cell:active{transform:scale(.92)}}
+tfoot td{font-size:13px;color:var(--muted);text-align:center;padding:10px 2px;border-bottom:0}
+tfoot td.name{color:var(--muted);font-weight:600}
+.empty{padding:28px 16px;color:var(--muted)}
+/* edit panel */
+.edit{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px}
+.edit h2{font-size:20px;margin:0 0 4px}
+.edit p{margin:0 0 12px;color:var(--muted);font-size:14px}
+.erow{display:grid;grid-template-columns:minmax(0,1fr) 150px 44px 44px 44px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.erow input,.erow select,.add input,.add select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);color:var(--ink);width:100%}
+.ib{min-height:44px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);cursor:pointer;font-size:16px}
+.ib.del[data-ask=true]{background:#b3261e;color:#fff;border-color:#b3261e;font-size:12px}
+.add{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:6px;margin-top:12px}
+.login{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:14px}
+.login p{margin:0 0 12px;color:var(--muted)}
+.primary{background:var(--ok);color:#fff;border:0;border-radius:10px;min-height:48px;padding:0 20px;font-weight:700;font-size:16px;cursor:pointer}
+.note{font-size:13px;color:var(--muted);margin-top:14px}
+@media(max-width:600px){
+ .name{min-width:118px;max-width:140px;font-size:14px;padding-left:10px}
+ .cell{width:38px;height:38px}
+ .erow{grid-template-columns:minmax(0,1fr) 44px 44px 44px}
+ .erow select{grid-column:1/-1;order:5}
+ .add{grid-template-columns:minmax(0,1fr) auto}.add select{grid-column:1/-1}
 }
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#1c1c1a;
-    --bg2:#262624;
-    --bg3:#2e2e2c;
-    --text:#f0f0ec;
-    --text2:#9b9b96;
-    --text3:#6b6b67;
-    --border:rgba(255,255,255,0.12);
-    --border2:rgba(255,255,255,0.22);
-  }
-}
-body{
-  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  background:var(--bg3);
-  color:var(--text);
-  min-height:100vh;
-  padding:1.5rem 1rem;
-}
-.container{max-width:960px;margin:0 auto}
-h1{
-  font-size:20px;
-  font-weight:500;
-  margin-bottom:1.5rem;
-  color:var(--text);
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-h1 span{font-size:22px}
-.card{
-  background:var(--bg);
-  border:0.5px solid var(--border);
-  border-radius:var(--radius-lg);
-  padding:1.25rem;
-  margin-bottom:1rem;
-}
-.header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:1.25rem;
-  flex-wrap:wrap;
-  gap:10px;
-}
-.month-nav{display:flex;align-items:center;gap:8px}
-.month-nav button{
-  background:none;
-  border:0.5px solid var(--border2);
-  border-radius:var(--radius);
-  padding:5px 12px;
-  cursor:pointer;
-  font-size:14px;
-  color:var(--text);
-}
-.month-nav button:hover{background:var(--bg2)}
-.month-label{
-  font-size:15px;
-  font-weight:500;
-  min-width:140px;
-  text-align:center;
-  color:var(--text);
-}
-.actions{display:flex;gap:8px;flex-wrap:wrap}
-.btn{
-  background:none;
-  border:0.5px solid var(--border2);
-  border-radius:var(--radius);
-  padding:5px 12px;
-  cursor:pointer;
-  font-size:12px;
-  color:var(--text2);
-  white-space:nowrap;
-}
-.btn:hover{background:var(--bg2);color:var(--text)}
-.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
-table{border-collapse:collapse;min-width:560px;width:100%}
-th{
-  font-size:11px;
-  color:var(--text3);
-  font-weight:400;
-  padding:4px 0;
-  text-align:center;
-  border-bottom:0.5px solid var(--border);
-}
-th.today-th{color:var(--blue);font-weight:500}
-.habit-name{
-  font-size:12px;
-  color:var(--text);
-  padding:4px 8px 4px 0;
-  white-space:nowrap;
-  max-width:160px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  cursor:pointer;
-  user-select:none;
-}
-.habit-name:hover{color:var(--blue)}
-td.day-cell{padding:1px;text-align:center}
-.cell{
-  width:20px;
-  height:20px;
-  border-radius:4px;
-  border:0.5px solid var(--border);
-  cursor:pointer;
-  background:var(--bg);
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  transition:background 0.1s, border-color 0.1s;
-}
-.cell:hover{border-color:var(--border2);background:var(--bg2)}
-.cell.done{background:var(--green);border-color:var(--green-dark)}
-.cell.today-col{border-color:var(--blue)}
-.cell.done.today-col{background:var(--green);border-color:var(--green-dark)}
-.section-header td{
-  padding:10px 0 3px;
-  font-size:10px;
-  font-weight:500;
-  color:var(--text3);
-  letter-spacing:0.06em;
-  text-transform:uppercase;
-  border-top:0.5px solid var(--border);
-}
-.section-header:first-child td{border-top:none;padding-top:4px}
-.add-row td{padding:8px 0 2px}
-.add-btn{
-  background:none;
-  border:0.5px dashed var(--border2);
-  border-radius:var(--radius);
-  padding:4px 12px;
-  cursor:pointer;
-  font-size:12px;
-  color:var(--text2);
-}
-.add-btn:hover{border-color:var(--text2);color:var(--text)}
-.streak{font-size:10px;color:var(--green);padding-left:4px}
-.del-habit{
-  font-size:10px;
-  color:var(--text3);
-  cursor:pointer;
-  padding:0 4px;
-  opacity:0;
-  transition:opacity 0.1s;
-}
-tr:hover .del-habit{opacity:1}
-.del-habit:hover{color:var(--red)}
-.today-dot{
-  width:5px;height:5px;
-  border-radius:50%;
-  background:var(--blue);
-  display:inline-block;
-  margin-left:3px;
-  vertical-align:middle;
-}
-.modal-bg{
-  position:fixed;inset:0;
-  background:rgba(0,0,0,0.4);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  z-index:100;
-}
-.modal{
-  background:var(--bg);
-  border:0.5px solid var(--border2);
-  border-radius:var(--radius-lg);
-  padding:1.5rem;
-  width:min(320px,92vw);
-}
-.modal h3{font-size:15px;font-weight:500;margin-bottom:14px;color:var(--text)}
-.modal input,.modal select{
-  width:100%;
-  border:0.5px solid var(--border2);
-  border-radius:var(--radius);
-  padding:8px 10px;
-  font-size:13px;
-  background:var(--bg);
-  color:var(--text);
-  margin-bottom:10px;
-  outline:none;
-}
-.modal input:focus,.modal select:focus{border-color:var(--blue)}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
-.modal-btns button{
-  padding:7px 16px;
-  border-radius:var(--radius);
-  font-size:13px;
-  cursor:pointer;
-  border:0.5px solid var(--border2);
-  background:none;
-  color:var(--text);
-}
-.modal-btns button.primary{
-  background:var(--green);
-  border-color:var(--green-dark);
-  color:#fff;
-}
-.modal-btns button.primary:hover{background:var(--green-dark)}
-.stats{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(100px,1fr));
-  gap:10px;
-  margin-bottom:1rem;
-}
-.stat{
-  background:var(--bg2);
-  border-radius:var(--radius);
-  padding:0.75rem 1rem;
-  text-align:center;
-}
-.stat-val{font-size:22px;font-weight:500;color:var(--text)}
-.stat-lbl{font-size:11px;color:var(--text3);margin-top:2px}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1><span>✅</span> Трекер звичок</h1>
-
-  <div class="stats" id="stats"></div>
-
-  <div class="card">
-    <div class="header">
-      <div class="month-nav">
-        <button id="prev">←</button>
-        <span class="month-label" id="month-label"></span>
-        <button id="next">→</button>
-      </div>
-      <div class="actions">
-        <button class="btn" id="today-btn">Сьогодні</button>
-        <button class="btn" id="export-btn">Експорт CSV</button>
-      </div>
+<div class="wrap">
+  <h1>Трекер звичок</h1>
+  <p class="sub">Галочка — це хоч кілька хвилин. Не все треба, просто відмічай, що було.</p>
+  <div class="bar">
+    <div class="seg" role="group" aria-label="Скільки днів показувати">
+      <button id="r4" data-r="4">4 дні</button>
+      <button id="r7" data-r="7">Тиждень</button>
+      <button id="r31" data-r="31">Місяць</button>
     </div>
-    <div class="table-wrap">
-      <table id="tracker-table"></table>
-    </div>
+    <button class="btn" id="prev" aria-label="Раніше">←</button>
+    <span class="range" id="rangeLabel"></span>
+    <button class="btn" id="next" aria-label="Пізніше">→</button>
+    <button class="btn" id="todayBtn">Сьогодні</button>
+    <span class="sp"></span>
+    <button class="btn" id="editBtn" aria-expanded="false">Змінити список</button>
+    <button class="btn" id="authBtn" hidden>Увійти</button>
   </div>
+  <p class="status" id="status">Завантаження…</p>
+  <div class="login" id="login" hidden><p>Увійди через Google, щоб галочки зберігались і були однакові на ПК і телефоні. Це треба зробити один раз на кожному пристрої.</p><button class="primary" id="loginBtn">Увійти через Google</button></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="edit" id="edit" hidden></div>
 </div>
-
-<div class="modal-bg" id="modal" style="display:none">
-  <div class="modal">
-    <h3 id="modal-title">Нова звичка</h3>
-    <input type="text" id="habit-input" placeholder="Назва звички..." maxlength="60"/>
-    <select id="habit-section">
-      <option value="Ранок">Ранок</option>
-      <option value="День">День</option>
-      <option value="Вечір">Вечір</option>
-      <option value="Інше">Інше</option>
-    </select>
-    <div class="modal-btns">
-      <button id="modal-cancel">Скасувати</button>
-      <button class="primary" id="modal-save">Зберегти</button>
-    </div>
-  </div>
-</div>
-
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <script>
-const STORAGE_KEY = 'habit_tracker_v1';
-const MONTHS_UA = ['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
-const today = new Date();
+{
+const SECTIONS=['Тіло','Розвиток','Сім\'я','Для себе','Режим','Інше'];
+const DOW=['Нд','Пн','Вт','Ср','Чт','Пт','Сб'];
+const MON=['січ','лют','бер','кві','тра','чер','лип','сер','вер','жов','лис','гру'];
+const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const LS='ht_v3_cache';
+let habits=null;            // [{id,name,section}]
+const months={};            // 'YYYY-MM' -> {hid:{day:true}}
+let range=4, end=startOfDay(new Date()), editing=false, db=null, mode='loading';
+const subs={}; const writing={}; const dirty={};
+let settingsWriting=false, settingsDirty=false;
 
-const DEFAULT_HABITS = [
-  {id:'h1',name:'Сон',section:'Ранок'},
-  {id:'h2',name:'Зарядка',section:'Ранок'},
-  {id:'h3',name:'Вправи на очі',section:'Ранок'},
-  {id:'h4',name:'Ранкові процедури',section:'Ранок'},
-  {id:'h5',name:'Читання книжки',section:'Ранок'},
-  {id:'h6',name:'Англійська',section:'Ранок'},
-  {id:'h7',name:'НЕ потрібне в телефоні',section:'Ранок'},
-  {id:'h8',name:'Робота',section:'День'},
-  {id:'h9',name:'Вправи',section:'День'},
-  {id:'h10',name:'Час з Марком',section:'День'},
-  {id:'h11',name:'Сімейна допомога',section:'День'},
-  {id:'h12',name:'Серіали / фільми',section:'Вечір'},
-  {id:'h13',name:'Сімейні дозвілля',section:'Вечір'},
-  {id:'h14',name:'Приготування їжі',section:'Вечір'},
-];
+function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x}
+function mk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function days(){
+  if(range===31){const a=new Date(end.getFullYear(),end.getMonth(),1);const n=new Date(end.getFullYear(),end.getMonth()+1,0).getDate();return Array.from({length:n},(_,i)=>new Date(a.getFullYear(),a.getMonth(),i+1))}
+  return Array.from({length:range},(_,i)=>{const x=new Date(end);x.setDate(x.getDate()-(range-1-i));return x});
+}
+function isDone(h,d){const m=months[mk(d)];return !!(m&&m[h]&&m[h][d.getDate()])}
 
-let state = {
-  habits: DEFAULT_HABITS,
-  done: {},
-  viewYear: today.getFullYear(),
-  viewMonth: today.getMonth()
-};
+function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){habits=c.habits||null;Object.assign(months,c.months||{})}}catch(e){}}
+function saveCache(){try{localStorage.setItem(LS,JSON.stringify({habits,months}))}catch(e){}}
 
-function load() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const saved = JSON.parse(raw);
-      state.habits = saved.habits || DEFAULT_HABITS;
-      state.done = saved.done || {};
-    }
-  } catch(e) {}
-  render();
+function setStatus(t){document.getElementById('status').textContent=t}
+function statusFor(){
+  if(mode==='db')setStatus('Синхронізується між пристроями.');
+  else if(mode==='local')setStatus('Немає зв’язку зі сховищем: зміни зберігаються лише на цьому пристрої.');
+  else setStatus('Завантаження…');
 }
 
-function save() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({habits: state.habits, done: state.done}));
-  } catch(e) {}
+function render(){
+  const ds=days(), today=startOfDay(new Date()).getTime();
+  ['r4','r7','r31'].forEach(id=>document.getElementById(id).setAttribute('aria-pressed',String(+id.slice(1)===range)));
+  const a=ds[0],b=ds[ds.length-1];
+  document.getElementById('rangeLabel').textContent=range===31?(['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'][a.getMonth()]+' '+a.getFullYear()):(a.getDate()+' '+MON[a.getMonth()]+' – '+b.getDate()+' '+MON[b.getMonth()]);
+  const sheet=document.getElementById('sheet');
+  if(!habits){sheet.innerHTML='<div class="empty">Завантажую список…</div>';return}
+  if(!habits.length){sheet.innerHTML='<div class="empty">Список порожній. Натисни «Змінити список» і додай звички.</div>';return}
+  const head='<tr><th class="name" scope="col">Звичка</th>'+ds.map(d=>`<th scope="col" class="${d.getTime()===today?'today':''}">${DOW[d.getDay()]}<b>${d.getDate()}</b></th>`).join('')+'</tr>';
+  let body='';
+  SECTIONS.forEach(s=>{
+    const hs=habits.filter(h=>(h.section||'Інше')===s);if(!hs.length)return;
+    body+=`<tr class="secrow"><td class="name">${esc(s)}</td><td colspan="${ds.length}"></td></tr>`;
+    body+=hs.map(h=>'<tr><th class="name" scope="row">'+esc(h.name)+'</th>'+ds.map(d=>{const on=isDone(h.id,d);return `<td class="c ${d.getTime()===today?'today':''}"><button class="cell" aria-pressed="${on}" aria-label="${esc(h.name)}, ${d.getDate()} ${MON[d.getMonth()]}" data-h="${h.id}" data-d="${d.getFullYear()}-${d.getMonth()}-${d.getDate()}">${CHECK}</button></td>`}).join('')+'</tr>').join('');
+  });
+  const foot='<tr><td class="name">Відмічено</td>'+ds.map(d=>{const n=habits.filter(h=>isDone(h.id,d)).length;return `<td class="${d.getTime()===today?'today':''}">${n||'·'}</td>`}).join('')+'</tr>';
+  const sx=sheet.scrollLeft;
+  sheet.innerHTML=`<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
+  if(range===31){const t=sheet.querySelector('th.today');if(t&&!sx)sheet.scrollLeft=Math.max(0,t.offsetLeft-200);else sheet.scrollLeft=sx}
+  ensureSubs();
 }
 
-function daysInMonth(y, m) { return new Date(y, m+1, 0).getDate(); }
-function cellKey(hid, y, m, d) { return `${hid}_${y}_${m}_${d}`; }
+function renderEdit(){
+  const el=document.getElementById('edit');el.hidden=!editing;
+  document.getElementById('editBtn').setAttribute('aria-expanded',String(editing));
+  document.getElementById('editBtn').textContent=editing?'Готово':'Змінити список';
+  if(!editing)return;
+  const opts=s=>SECTIONS.map(x=>`<option${x===s?' selected':''}>${esc(x)}</option>`).join('');
+  el.innerHTML='<h2>Список звичок</h2><p>Перейменуй, перенеси в інший розділ або прибери. Відмічені дні не зникають.</p>'+
+   (habits||[]).map((h,i)=>`<div class="erow" data-i="${i}"><input aria-label="Назва" value="${esc(h.name)}" data-f="name" maxlength="60"><select aria-label="Розділ" data-f="section">${opts(h.section||'Інше')}</select><button class="ib" data-a="up" aria-label="Вище">↑</button><button class="ib" data-a="down" aria-label="Нижче">↓</button><button class="ib del" data-a="del" aria-label="Прибрати">✕</button></div>`).join('')+
+   `<form class="add" id="addForm"><input id="newName" placeholder="Нова звичка" aria-label="Нова звичка" maxlength="60"><select id="newSec" aria-label="Розділ">${opts('Тіло')}</select><button class="ib" style="padding:0 16px">Додати</button></form>`;
+}
 
-function getStreak(hid) {
-  let streak = 0;
-  let d = new Date(today);
-  while (true) {
-    const k = cellKey(hid, d.getFullYear(), d.getMonth(), d.getDate());
-    if (!state.done[k]) break;
-    streak++;
-    d.setDate(d.getDate() - 1);
+function changeHabits(fn){fn();saveCache();render();renderEdit();writeSettings()}
+let fs=null, uid=null;
+const userDoc=()=>fs.collection('users').doc(uid);
+async function writeSettings(){
+  if(mode!=='db')return;
+  if(settingsWriting){settingsDirty=true;return}
+  settingsWriting=true;
+  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set({habits:habits.map(h=>({id:h.id,name:h.name,section:h.section}))})}while(settingsDirty)}
+  catch(e){setStatus('Не вдалося зберегти список ('+(e&&e.code||'помилка')+'). Зміни лишились на цьому пристрої.')}
+  settingsWriting=false;
+}
+async function writeMonth(k){
+  if(mode!=='db')return;
+  if(writing[k]){dirty[k]=true;return}
+  writing[k]=true;
+  try{do{dirty[k]=false;await userDoc().collection('months').doc(k).set({done:JSON.parse(JSON.stringify(months[k]||{}))})}while(dirty[k])}
+  catch(e){setStatus('Не вдалося зберегти ('+(e&&e.code||'помилка')+'). Відмітка лишилась на цьому пристрої.')}
+  writing[k]=false;
+}
+function ensureSubs(){
+  if(mode!=='db')return;
+  new Set(days().map(mk)).forEach(k=>{
+    if(subs[k])return;
+    subs[k]=userDoc().collection('months').doc(k).onSnapshot({includeMetadataChanges:false},s=>{
+      if(writing[k]||dirty[k])return;
+      if(s.exists){months[k]=JSON.parse(JSON.stringify(s.data().done||{}))}
+      else if(!s.metadata.fromCache&&months[k]&&Object.keys(months[k]).length){writeMonth(k)}
+      saveCache();render();
+    },e=>{});
+  });
+}
+document.addEventListener('click',e=>{
+  const c=e.target.closest('.cell');
+  if(c){const [y,m,d]=c.dataset.d.split('-').map(Number);const k=y+'-'+String(m+1).padStart(2,'0');const h=c.dataset.h;
+    months[k]=months[k]||{};months[k][h]=months[k][h]||{};
+    if(months[k][h][d])delete months[k][h][d];else months[k][h][d]=true;
+    if(!Object.keys(months[k][h]).length)delete months[k][h];
+    saveCache();render();writeMonth(k);return}
+  const r=e.target.closest('[data-r]');if(r){range=+r.dataset.r;if(range!==31)end=startOfDay(new Date());render();return}
+  const a=e.target.closest('.ib[data-a]');
+  if(a){const i=+a.closest('.erow').dataset.i;
+    if(a.dataset.a==='up'&&i>0)changeHabits(()=>{[habits[i-1],habits[i]]=[habits[i],habits[i-1]]});
+    if(a.dataset.a==='down'&&i<habits.length-1)changeHabits(()=>{[habits[i+1],habits[i]]=[habits[i],habits[i+1]]});
+    if(a.dataset.a==='del'){if(a.dataset.ask==='true')changeHabits(()=>{habits.splice(i,1)});else{a.dataset.ask='true';a.textContent='Точно?';setTimeout(()=>{if(a.isConnected){a.dataset.ask='false';a.textContent='✕'}},3000)}}
   }
-  return streak;
-}
+});
+document.addEventListener('change',e=>{
+  const f=e.target.dataset&&e.target.dataset.f;if(!f)return;
+  const i=+e.target.closest('.erow').dataset.i;const v=e.target.value.trim();if(f==='name'&&!v)return;
+  changeHabits(()=>{habits[i][f]=v});
+});
+document.addEventListener('submit',e=>{
+  if(e.target.id!=='addForm')return;e.preventDefault();
+  const n=document.getElementById('newName').value.trim();if(!n)return;
+  const s=document.getElementById('newSec').value;
+  changeHabits(()=>{(habits=habits||[]).push({id:'h'+Date.now().toString(36),name:n,section:s})});
+  document.getElementById('newName').focus();
+});
+document.getElementById('prev').onclick=()=>{if(range===31)end=new Date(end.getFullYear(),end.getMonth(),0);else end.setDate(end.getDate()-range);render()};
+document.getElementById('next').onclick=()=>{if(range===31)end=new Date(end.getFullYear(),end.getMonth()+2,0);else end.setDate(end.getDate()+range);render()};
+document.getElementById('todayBtn').onclick=()=>{end=startOfDay(new Date());render()};
+document.getElementById('editBtn').onclick=()=>{editing=!editing;renderEdit()};
 
-function sections() {
-  const order = ['Ранок','День','Вечір','Інше'];
-  const map = {};
-  state.habits.forEach(h => {
-    const s = h.section || 'Інше';
-    if (!map[s]) map[s] = [];
-    map[s].push(h);
+loadCache();render();
+
+const DEFAULTS=[['Ранкова зарядка','Тіло'],['Спина','Тіло'],['Очі','Тіло'],['Вечірня зарядка','Тіло'],['Силове','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Англійська','Розвиток'],['Курс / навички','Розвиток'],['Час з Марком','Сім\'я'],['Електрика з Марком','Сім\'я'],['Сімейне дозвілля','Сім\'я'],['Допомога по дому','Сім\'я'],['Щось «для себе»','Для себе'],['Кіно / серіал','Для себе'],['Гра','Для себе'],['Ліг до 00:00','Режим'],['Без зайвого телефону','Режим'],['Готував сам','Режим']].map(([name,section],i)=>({id:'d'+i,name,section}));
+function goLocal(msg){mode='local';if(!habits)habits=DEFAULTS.slice();setStatus(msg);render()}
+const cfg=window.FIREBASE_CONFIG;
+if(!window.firebase||!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){
+  goLocal('Сховище ще не підключене: галочки зберігаються лише на цьому пристрої.');
+}else{
+  firebase.initializeApp(cfg);
+  fs=firebase.firestore();
+  try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
+  const auth=firebase.auth();
+  const provider=new firebase.auth.GoogleAuthProvider();
+  const login=async()=>{try{await auth.signInWithPopup(provider)}catch(e){if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'))auth.signInWithRedirect(provider);else setStatus('Не вдалося увійти ('+(e&&e.code||'помилка')+').')}};
+  document.getElementById('loginBtn').onclick=login;
+  const authBtn=document.getElementById('authBtn');
+  authBtn.onclick=()=>{if(uid){if(authBtn.dataset.ask==='true'){auth.signOut()}else{authBtn.dataset.ask='true';authBtn.textContent='Точно вийти?';setTimeout(()=>{authBtn.dataset.ask='false';authBtn.textContent='Вийти'},3000)}}else login()};
+  let unsubSettings=null;
+  auth.onAuthStateChanged(u=>{
+    Object.keys(subs).forEach(k=>{subs[k]();delete subs[k]});
+    if(unsubSettings){unsubSettings();unsubSettings=null}
+    if(!u){uid=null;mode='local';if(!habits)habits=DEFAULTS.slice();document.getElementById('login').hidden=false;authBtn.hidden=true;setStatus('Без входу галочки зберігаються лише на цьому пристрої.');render();return}
+    uid=u.uid;document.getElementById('login').hidden=true;authBtn.hidden=false;authBtn.textContent='Вийти';
+    setStatus('Підключаюсь…');
+    const timer=setTimeout(()=>{if(mode!=='db')setStatus('Немає зв’язку зі сховищем. Відмітки збережуться, коли з’явиться інтернет.')},10000);
+    unsubSettings=userDoc().collection('meta').doc('settings').onSnapshot(s=>{
+      if(s.exists){if(!settingsWriting&&!settingsDirty)habits=(s.data().habits||[]).map(h=>({id:h.id,name:h.name,section:h.section}))}
+      else if(!s.metadata.fromCache){if(!habits||!habits.length)habits=DEFAULTS.slice();mode='db';writeSettings()}
+      if(!s.metadata.fromCache){clearTimeout(timer);mode='db';setStatus('Синхронізується між пристроями · '+(u.email||''))}
+      saveCache();render();if(!document.getElementById('edit').contains(document.activeElement))renderEdit();ensureSubs();
+    },e=>{clearTimeout(timer);goLocal('Помилка доступу до сховища ('+(e&&e.code||'')+'). Перевір правила Firestore.')});
   });
-  return order.filter(s => map[s] && map[s].length > 0).map(s => ({name: s, habits: map[s]}));
 }
-
-function renderStats() {
-  const y = state.viewYear, m = state.viewMonth;
-  const days = daysInMonth(y, m);
-  const todayY = today.getFullYear(), todayM = today.getMonth(), todayD = today.getDate();
-  const isCurrent = (y === todayY && m === todayM);
-  const maxDay = isCurrent ? todayD : days;
-
-  let totalPossible = 0, totalDone = 0, bestStreak = 0;
-  state.habits.forEach(h => {
-    for (let d = 1; d <= maxDay; d++) {
-      totalPossible++;
-      if (state.done[cellKey(h.id, y, m, d)]) totalDone++;
-    }
-    const s = getStreak(h.id);
-    if (s > bestStreak) bestStreak = s;
-  });
-
-  const pct = totalPossible > 0 ? Math.round(totalDone / totalPossible * 100) : 0;
-
-  document.getElementById('stats').innerHTML = `
-    <div class="stat"><div class="stat-val">${totalDone}</div><div class="stat-lbl">Виконано цього місяця</div></div>
-    <div class="stat"><div class="stat-val">${pct}%</div><div class="stat-lbl">Відсоток виконання</div></div>
-    <div class="stat"><div class="stat-val">${bestStreak}</div><div class="stat-lbl">Найкращий стрік (днів)</div></div>
-  `;
 }
-
-function render() {
-  renderStats();
-  const y = state.viewYear, m = state.viewMonth;
-  const days = daysInMonth(y, m);
-  document.getElementById('month-label').textContent = MONTHS_UA[m] + ' ' + y;
-  const todayD = today.getDate(), todayM = today.getMonth(), todayY = today.getFullYear();
-  const isCurrentMonth = (y === todayY && m === todayM);
-
-  let html = '<tr><th style="text-align:left;padding-left:0;min-width:140px">Звичка</th>';
-  for (let d = 1; d <= days; d++) {
-    const isTod = isCurrentMonth && d === todayD;
-    html += `<th class="${isTod ? 'today-th' : ''}">${d}${isTod ? '<span class="today-dot"></span>' : ''}</th>`;
-  }
-  html += '</tr>';
-
-  sections().forEach(sec => {
-    html += `<tr class="section-header"><td colspan="${days+1}">${sec.name}</td></tr>`;
-    sec.habits.forEach(h => {
-      const streak = getStreak(h.id);
-      html += `<tr data-hid="${h.id}">`;
-      html += `<td><span class="habit-name" onclick="editHabit('${h.id}')" title="${h.name}">${h.name}</span>`;
-      if (streak > 1) html += `<span class="streak">${streak}д</span>`;
-      html += `<span class="del-habit" onclick="deleteHabit('${h.id}')" title="Видалити">✕</span></td>`;
-      for (let d = 1; d <= days; d++) {
-        const k = cellKey(h.id, y, m, d);
-        const done = !!state.done[k];
-        const isTod = isCurrentMonth && d === todayD;
-        html += `<td class="day-cell"><div class="cell${done ? ' done' : ''}${isTod ? ' today-col' : ''}" onclick="toggle('${h.id}',${d})"></div></td>`;
-      }
-      html += '</tr>';
-    });
-  });
-
-  html += `<tr class="add-row"><td colspan="${days+1}"><button class="add-btn" onclick="openModal()">+ Додати звичку</button></td></tr>`;
-  document.getElementById('tracker-table').innerHTML = html;
-}
-
-window.toggle = function(hid, d) {
-  const k = cellKey(hid, state.viewYear, state.viewMonth, d);
-  state.done[k] = !state.done[k];
-  if (!state.done[k]) delete state.done[k];
-  save(); render();
-};
-
-window.deleteHabit = function(hid) {
-  if (!confirm('Видалити звичку? Відмічені дні збережуться.')) return;
-  state.habits = state.habits.filter(h => h.id !== hid);
-  save(); render();
-};
-
-let editingId = null;
-window.editHabit = function(hid) { openModal(hid); };
-
-window.openModal = function(hid) {
-  editingId = hid || null;
-  const h = hid ? state.habits.find(x => x.id === hid) : null;
-  document.getElementById('modal-title').textContent = h ? 'Редагувати звичку' : 'Нова звичка';
-  document.getElementById('habit-input').value = h ? h.name : '';
-  document.getElementById('habit-section').value = h ? h.section : 'Ранок';
-  document.getElementById('modal').style.display = 'flex';
-  setTimeout(() => document.getElementById('habit-input').focus(), 50);
-};
-
-document.getElementById('modal-cancel').onclick = () => { document.getElementById('modal').style.display = 'none'; };
-document.getElementById('modal').onclick = function(e) { if (e.target === this) this.style.display = 'none'; };
-
-document.getElementById('modal-save').onclick = () => {
-  const name = document.getElementById('habit-input').value.trim();
-  if (!name) return;
-  const section = document.getElementById('habit-section').value;
-  if (editingId) {
-    const h = state.habits.find(x => x.id === editingId);
-    if (h) { h.name = name; h.section = section; }
-  } else {
-    state.habits.push({id: 'h' + Date.now(), name, section});
-  }
-  document.getElementById('modal').style.display = 'none';
-  save(); render();
-};
-
-document.getElementById('habit-input').onkeydown = function(e) {
-  if (e.key === 'Enter') document.getElementById('modal-save').click();
-};
-
-document.getElementById('prev').onclick = () => {
-  state.viewMonth--;
-  if (state.viewMonth < 0) { state.viewMonth = 11; state.viewYear--; }
-  render();
-};
-document.getElementById('next').onclick = () => {
-  state.viewMonth++;
-  if (state.viewMonth > 11) { state.viewMonth = 0; state.viewYear++; }
-  render();
-};
-document.getElementById('today-btn').onclick = () => {
-  state.viewYear = today.getFullYear();
-  state.viewMonth = today.getMonth();
-  render();
-};
-
-document.getElementById('export-btn').onclick = () => {
-  const y = state.viewYear, m = state.viewMonth;
-  const days = daysInMonth(y, m);
-  let csv = 'Звичка,' + Array.from({length: days}, (_, i) => i+1).join(',') + '\n';
-  state.habits.forEach(h => {
-    csv += '"' + h.name + '"';
-    for (let d = 1; d <= days; d++) {
-      csv += ',' + (state.done[cellKey(h.id, y, m, d)] ? '1' : '0');
-    }
-    csv += '\n';
-  });
-  const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = `звички_${y}_${m+1}.csv`; a.click();
-  URL.revokeObjectURL(url);
-};
-
-load();
 </script>
 </body>
 </html>
