@@ -6,5 +6,6 @@ window.FIREBASE_CONFIG = {
   projectId: "habit-tracker-13dea",
   storageBucket: "habit-tracker-13dea.firebasestorage.app",
   messagingSenderId: "705427508403",
-  appId: "1:705427508403:web:d2a5349437c7e6d9a9f4c6"
+  appId: "1:705427508403:web:d2a5349437c7e6d9a9f4c6",
+  databaseId: "default11"   // назва бази Firestore
 };

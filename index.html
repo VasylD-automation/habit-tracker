@@ -104,11 +104,11 @@ tfoot td.name{color:var(--muted);font-weight:600}
   <div class="sheet" id="sheet"></div>
   <div class="edit" id="edit" hidden></div>
 </div>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 {
 const SECTIONS=['Тіло','Розвиток','Сім\'я','Для себе','Режим','Інше'];
 const DOW=['Нд','Пн','Вт','Ср','Чт','Пт','Сб'];
@@ -241,14 +241,20 @@ loadCache();render();
 const DEFAULTS=[['Ранкова зарядка','Тіло'],['Спина','Тіло'],['Очі','Тіло'],['Вечірня зарядка','Тіло'],['Силове','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Англійська','Розвиток'],['Курс / навички','Розвиток'],['Час з Марком','Сім\'я'],['Електрика з Марком','Сім\'я'],['Сімейне дозвілля','Сім\'я'],['Допомога по дому','Сім\'я'],['Щось «для себе»','Для себе'],['Кіно / серіал','Для себе'],['Гра','Для себе'],['Ліг до 00:00','Режим'],['Без зайвого телефону','Режим'],['Готував сам','Режим']].map(([name,section],i)=>({id:'d'+i,name,section}));
 function goLocal(msg){mode='local';if(!habits)habits=DEFAULTS.slice();setStatus(msg);render()}
 const cfg=window.FIREBASE_CONFIG;
-if(!window.firebase||!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){
+if(!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){
   goLocal('Сховище ще не підключене: галочки зберігаються лише на цьому пристрої.');
 }else{
-  firebase.initializeApp(cfg);
-  fs=firebase.firestore();
-  try{fs.enablePersistence({synchronizeTabs:true}).catch(()=>{})}catch(e){}
-  const auth=firebase.auth();
-  const provider=new firebase.auth.GoogleAuthProvider();
+  const app=initializeApp(cfg);
+  let raw;
+  try{raw=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})},cfg.databaseId||'(default)')}
+  catch(e){raw=initializeFirestore(app,{},cfg.databaseId||'(default)')}
+  const wrapSnap=s=>({exists:s.exists(),data:()=>s.data(),metadata:s.metadata});
+  const D=ref=>({collection:n=>C(collection(ref,n)),set:d=>setDoc(ref,d),onSnapshot:(o,n,e)=>{if(typeof o==='function'){e=n;n=o}return onSnapshot(ref,x=>n(wrapSnap(x)),e)}});
+  const C=ref=>({doc:id=>D(doc(ref,id))});
+  fs={collection:n=>C(collection(raw,n))};
+  const A=getAuth(app);
+  const auth={signInWithPopup:p=>signInWithPopup(A,p),signInWithRedirect:p=>signInWithRedirect(A,p),signOut:()=>signOut(A),onAuthStateChanged:f=>onAuthStateChanged(A,f)};
+  const provider=new GoogleAuthProvider();
   const login=async()=>{try{await auth.signInWithPopup(provider)}catch(e){if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'))auth.signInWithRedirect(provider);else setStatus('Не вдалося увійти ('+(e&&e.code||'помилка')+').')}};
   document.getElementById('loginBtn').onclick=login;
   const authBtn=document.getElementById('authBtn');
