@@ -162,7 +162,7 @@ input,select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border:1
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,onSnapshot,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 {
 const SECTIONS=['Тіло','Розвиток','Сім\'я','Для себе','Режим','Інше'];
 const HZ=['25 років','5 років','90 днів'];
@@ -457,7 +457,7 @@ else{
     cacheUid=u.uid;
     uid=u.uid;authItem.textContent='Вийти';setStatus('Підключаюсь…',false);
     if(mode==='login')mode='loading';
-    const timer=setTimeout(()=>{if(mode!=='db')setStatus('Немає зв’язку зі сховищем. Відмітки збережуться, коли з’явиться інтернет.',false)},10000);
+    const timer=setTimeout(async()=>{if(mode==='db')return;setStatus('Немає зв’язку зі сховищем. Перевіряю причину…',false);try{const r=await getDocFromServer(doc(raw,'users',u.uid,'meta','settings'));setStatus('Сервер відповів ('+(r.exists()?'дані є':'даних немає')+'), але оновлення не приходять. Онови сторінку.',false)}catch(e){setStatus('Немає зв’язку: '+((e&&e.code)||'')+' '+String((e&&e.message)||e).slice(0,160),false)}},10000);
     unsubSettings=userDoc().collection('meta').doc('settings').onSnapshot(s=>{
       let needWrite=false;
       if(s.exists){if(!settingsWriting&&!settingsDirty){const d=s.data();habits=(d.habits||[]).map(h=>({...h}));links=(d.links||[]).map(l=>({...l}));goals=d.goals?d.goals.map(g=>({...g})):null;goalsV=d.goalsV||(d.goals?1:0);needWrite=migrate()}}
