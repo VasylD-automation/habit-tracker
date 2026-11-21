@@ -162,7 +162,7 @@ input,select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border:1
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,onAuthStateChanged} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,onSnapshot,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {initializeFirestore,persistentLocalCache,persistentSingleTabManager,collection,doc,setDoc,onSnapshot,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 {
 const SECTIONS=['Тіло','Розвиток','Сім\'я','Для себе','Режим','Інше'];
 const HZ=['25 років','5 років','90 днів'];
@@ -436,7 +436,7 @@ if(!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){goLocal('Сховищ
 else{
   const app=initializeApp(cfg);
   let raw;
-  try{raw=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})},cfg.databaseId||'(default)')}
+  try{raw=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentSingleTabManager({forceOwnership:true})}),experimentalAutoDetectLongPolling:true},cfg.databaseId||'(default)')}
   catch(e){raw=initializeFirestore(app,{},cfg.databaseId||'(default)')}
   const wrap=s=>({exists:s.exists(),data:()=>s.data(),metadata:s.metadata});
   const D=ref=>({collection:n=>C(collection(ref,n)),set:d=>setDoc(ref,d),onSnapshot:(n,e)=>onSnapshot(ref,x=>n(wrap(x)),e)});
