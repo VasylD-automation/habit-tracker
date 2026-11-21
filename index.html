@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Трекер звичок</title>
 <meta name="theme-color" content="#11734f">
 <link rel="manifest" href="manifest.webmanifest">
@@ -13,97 +13,144 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* VOICE: спокійний, особистий, без оцінок — аркуш, а не іспит
-   IDEA: паперова таблиця звичок у клітинку, як його Excel
-   PICTURE: сама сітка днів і галочок, одразу під заголовком
-   COLOUR and TYPE: білий аркуш, чорнило, глибокий зелений для галочок; Manrope
-   LAYOUT: заголовок, панель днів, сітка; на телефоні 4 дні без прокрутки */
 :root{color-scheme:light dark;
 --bg:light-dark(#f4f3ef,#121412);--paper:light-dark(#ffffff,#1b1e1c);--ink:light-dark(#17191a,#eceeea);
 --muted:light-dark(#5a5f5c,#a3aaa5);--line:light-dark(#dcdcd6,#323733);--line2:light-dark(#b9bab3,#4a514c);
---ok:light-dark(#11734f,#3fb984);--okInk:#ffffff;--today:light-dark(#e8f3ee,#1f2e27);--sec:light-dark(#0e5a3f,#7fd3ab)}
+--ok:light-dark(#11734f,#3fb984);--today:light-dark(#e8f3ee,#1f2e27);--sec:light-dark(#0e5a3f,#7fd3ab);
+--h0:light-dark(#ebebe5,#262a27);--h1:light-dark(#c6e6d5,#1e4a36);--h2:light-dark(#86c9a6,#23704f);--h3:light-dark(#3c9f72,#2f9a6b);--h4:light-dark(#11734f,#56d199)}
 :root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
 *{box-sizing:border-box;min-width:0}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip}
-.wrap{max-width:1240px;margin:0 auto;padding:clamp(16px,3vw,40px) max(4vw,12px)}
-h1{font-size:clamp(28px,4vw,40px);line-height:1.05;margin:0;font-weight:800;text-wrap:balance}
-.sub{color:var(--muted);margin:6px 0 18px;font-size:15px}
-.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
-.seg{display:flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Manrope,system-ui,sans-serif;overflow-x:clip;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
 button{font:inherit;color:inherit}
-.seg button,.btn{background:var(--paper);border:0;padding:0 14px;min-height:44px;cursor:pointer;font-size:15px;font-weight:600}
+.top{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(10px + env(safe-area-inset-top)) max(4vw,12px) 8px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line)}
+.top h1{font-size:20px;margin:0;font-weight:800;flex:none}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--line2);flex:none}
+.dot.on{background:var(--ok)}
+.nav{flex:1;display:flex;align-items:center;justify-content:center;gap:2px}
+.nav button{background:none;border:0;min-height:44px;cursor:pointer;border-radius:10px}
+.nav .arr{width:44px;font-size:20px}
+.nav .lbl{font-weight:700;padding:0 8px;white-space:nowrap}
+.nav .lbl small{display:block;font-size:11px;color:var(--ok);font-weight:700;line-height:1}
+.more{width:44px;min-height:44px;border:0;background:none;cursor:pointer;border-radius:10px;font-size:22px;line-height:1}
+.menu{position:absolute;right:max(4vw,12px);top:calc(100% - 4px);background:var(--paper);border:1px solid var(--line2);border-radius:12px;box-shadow:0 10px 30px rgb(0 0 0/.15);padding:6px;display:grid;min-width:220px}
+.menu[hidden]{display:none}
+.menu button{background:none;border:0;text-align:left;padding:0 12px;min-height:44px;border-radius:8px;cursor:pointer;font-weight:600}
+.menu button:hover{background:var(--bg)}
+.menu .st{font-size:13px;color:var(--muted);padding:6px 12px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
+main{max-width:1000px;margin:0 auto;padding:14px max(4vw,12px)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--paper);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom)}
+.tabs button{background:none;border:0;min-height:62px;cursor:pointer;display:grid;place-items:center;gap:0;font-size:12px;font-weight:700;color:var(--muted);padding:6px 0}
+.tabs svg{width:24px;height:24px}
+.tabs button[aria-selected=true]{color:var(--ok)}
+:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+h2{font-size:18px;margin:0 0 10px;font-weight:800}
+.muted{color:var(--muted);font-size:14px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:10px;overflow:hidden;margin-bottom:12px;width:fit-content}
+.seg button{background:var(--paper);border:0;padding:0 14px;min-height:40px;cursor:pointer;font-size:14px;font-weight:700}
 .seg button+button{border-left:1px solid var(--line2)}
 .seg button[aria-pressed=true]{background:var(--ink);color:var(--paper)}
-.btn{border:1px solid var(--line2);border-radius:10px}
-.btn:focus-visible,.seg button:focus-visible,.cell:focus-visible{outline:3px solid var(--ok);outline-offset:2px}
-.range{font-weight:700;padding:0 6px;white-space:nowrap}
-.sp{flex:1}
-.status{font-size:13px;color:var(--muted);margin:0 0 10px}
+/* today */
+.energy{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.energy button{width:48px;height:48px;border-radius:12px;border:1.5px solid var(--line2);background:var(--paper);cursor:pointer;font-weight:800;font-size:18px}
+.energy button[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:#fff}
+.sec{color:var(--sec);font-size:13px;font-weight:800;margin:16px 4px 6px}
+.list{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;width:100%;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 14px;min-height:58px;text-align:left;cursor:pointer}
+.row:last-child{border-bottom:0}
+.row .t{flex:1}
+.row .t b{display:block;font-weight:700}
+.row .t span{font-size:12px;color:var(--muted)}
+.box{width:34px;height:34px;border-radius:9px;border:1.5px solid var(--line2);display:grid;place-items:center;flex:none}
+.box svg{width:20px;height:20px;opacity:0;color:#fff}
+[aria-pressed=true] .box{background:var(--ok);border-color:var(--ok)}
+[aria-pressed=true] .box svg{opacity:1}
+@media(prefers-reduced-motion:no-preference){.box,.cell{transition:background .12s,transform .12s}.row:active .box,.cell:active{transform:scale(.9)}}
+/* table */
 .sheet{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow-x:auto}
 table{border-collapse:separate;border-spacing:0;width:100%}
 th,td{border-bottom:1px solid var(--line);padding:0}
-thead th{font-size:13px;color:var(--muted);font-weight:600;padding:10px 2px 8px;text-align:center;white-space:nowrap;position:sticky;top:0;background:var(--paper)}
+thead th{font-size:12px;color:var(--muted);font-weight:600;padding:8px 2px 6px;text-align:center;white-space:nowrap;background:var(--paper)}
 thead th b{display:block;color:var(--ink);font-size:16px}
 th.today,td.today{background:var(--today)}
 thead th.today b{color:var(--ok)}
-.name{position:sticky;left:0;background:var(--paper);text-align:left;padding:6px 10px 6px 14px;font-size:15px;font-weight:600;min-width:150px;max-width:220px;border-right:1px solid var(--line)}
-thead .name{z-index:2}
-tr.secrow td{background:var(--bg);color:var(--sec);font-size:13px;font-weight:800;padding:12px 14px 6px;border-bottom:1px solid var(--line)}
-tr.secrow td.name{background:var(--bg)}
+.name{position:sticky;left:0;background:var(--paper);text-align:left;padding:6px 10px 6px 12px;font-size:14px;font-weight:600;min-width:120px;max-width:200px;border-right:1px solid var(--line)}
+tr.secrow td{background:var(--bg);color:var(--sec);font-size:12px;font-weight:800;padding:10px 12px 4px}
 td.c{text-align:center;padding:4px 3px}
-.cell{width:40px;height:40px;border-radius:9px;border:1.5px solid var(--line2);background:transparent;cursor:pointer;display:inline-grid;place-items:center;transition:background .12s,transform .12s}
-.cell[aria-pressed=true]{background:var(--ok);border-color:var(--ok);color:var(--okInk)}
-.cell svg{width:20px;height:20px;opacity:0}
+.cell{width:38px;height:38px;border-radius:9px;border:1.5px solid var(--line2);background:transparent;cursor:pointer;display:inline-grid;place-items:center;padding:0}
+.cell svg{width:18px;height:18px;opacity:0;color:#fff}
+.cell[aria-pressed=true]{background:var(--ok);border-color:var(--ok)}
 .cell[aria-pressed=true] svg{opacity:1}
-@media(prefers-reduced-motion:no-preference){.cell:active{transform:scale(.92)}}
-tfoot td{font-size:13px;color:var(--muted);text-align:center;padding:10px 2px;border-bottom:0}
-tfoot td.name{color:var(--muted);font-weight:600}
-.empty{padding:28px 16px;color:var(--muted)}
-/* edit panel */
-.edit{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:16px}
-.edit h2{font-size:20px;margin:0 0 4px}
-.edit p{margin:0 0 12px;color:var(--muted);font-size:14px}
-.erow{display:grid;grid-template-columns:minmax(0,1fr) 150px 44px 44px 44px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
-.erow input,.erow select,.add input,.add select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);color:var(--ink);width:100%}
-.ib{min-height:44px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);cursor:pointer;font-size:16px}
+tfoot td{font-size:12px;color:var(--muted);text-align:center;padding:8px 2px;border-bottom:0}
+/* analytics */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px}
+.kpi b{display:block;font-size:clamp(22px,5vw,30px);line-height:1.1}
+.kpi span{font-size:12px;color:var(--muted)}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,1fr);gap:3px;overflow-x:auto;padding-bottom:4px}
+.heat i{width:14px;height:14px;border-radius:3px;background:var(--h0);display:block}
+.heat i.f{background:transparent}
+.legend{display:flex;gap:4px;align-items:center;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.hrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:14px}
+.hrow:last-child{border-bottom:0}
+.bar{height:10px;background:var(--h0);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:6px}
+.hrow .n{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;white-space:nowrap;text-align:right}
+.ins{padding:10px 0;border-bottom:1px solid var(--line);font-size:15px}
+.ins:last-child{border-bottom:0}
+.ins b{color:var(--ok)}
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end;height:120px;margin-top:6px}
+.wk div{display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;justify-content:flex-end;font-size:12px;color:var(--muted)}
+.wk i{width:100%;max-width:34px;background:var(--ok);border-radius:6px 6px 2px 2px;min-height:2px}
+/* goals */
+.g{border-left:3px solid var(--line2);padding:4px 0 4px 12px;margin:10px 0}
+.g.h25{border-color:var(--ok)}
+.g .hz{font-size:11px;font-weight:800;color:var(--sec)}
+.g .gt{font-weight:800;font-size:16px}
+.g .g{margin-left:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{font-size:12px;border:1px solid var(--line2);border-radius:999px;padding:2px 9px;white-space:nowrap}
+.chip b{color:var(--ok)}
+/* edit */
+.erow{display:grid;grid-template-columns:minmax(0,1fr) 130px 44px 44px 44px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}
+.erow.goal{grid-template-columns:minmax(0,1fr) 120px 150px 44px}
+input,select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);color:var(--ink);width:100%}
+.ib{min-height:44px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);cursor:pointer;font-size:16px;padding:0 12px}
 .ib.del[data-ask=true]{background:#b3261e;color:#fff;border-color:#b3261e;font-size:12px}
-.add{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:6px;margin-top:12px}
-.login{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:14px}
-.login p{margin:0 0 12px;color:var(--muted)}
+.add{display:grid;grid-template-columns:minmax(0,1fr) 130px auto;gap:6px;margin-top:12px}
 .primary{background:var(--ok);color:#fff;border:0;border-radius:10px;min-height:48px;padding:0 20px;font-weight:700;font-size:16px;cursor:pointer}
-.note{font-size:13px;color:var(--muted);margin-top:14px}
+.empty{padding:20px;color:var(--muted)}
 @media(max-width:600px){
- .name{min-width:118px;max-width:140px;font-size:14px;padding-left:10px}
- .cell{width:38px;height:38px}
- .erow{grid-template-columns:minmax(0,1fr) 44px 44px 44px}
- .erow select{grid-column:1/-1;order:5}
+ .top h1{display:none}
+ .erow{grid-template-columns:minmax(0,1fr) 44px 44px 44px}.erow select{grid-column:1/-1;order:5}
+ .erow.goal{grid-template-columns:minmax(0,1fr) 44px}.erow.goal select{grid-column:1/-1}
  .add{grid-template-columns:minmax(0,1fr) auto}.add select{grid-column:1/-1}
+ .kpis{gap:6px}.kpi{padding:10px}
+ .hrow{grid-template-columns:minmax(0,1fr) 80px auto}
 }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Трекер звичок</h1>
-  <p class="sub">Галочка — це хоч кілька хвилин. Не все треба, просто відмічай, що було.</p>
-  <div class="bar">
-    <div class="seg" role="group" aria-label="Скільки днів показувати">
-      <button id="r4" data-r="4">4 дні</button>
-      <button id="r7" data-r="7">Тиждень</button>
-      <button id="r31" data-r="31">Місяць</button>
-    </div>
-    <button class="btn" id="prev" aria-label="Раніше">←</button>
-    <span class="range" id="rangeLabel"></span>
-    <button class="btn" id="next" aria-label="Пізніше">→</button>
-    <button class="btn" id="todayBtn">Сьогодні</button>
-    <span class="sp"></span>
-    <button class="btn" id="editBtn" aria-expanded="false">Змінити список</button>
-    <button class="btn" id="authBtn" hidden>Увійти</button>
+<header class="top">
+  <h1>Звички</h1>
+  <span class="dot" id="dot" title="Стан синхронізації"></span>
+  <div class="nav" id="nav"></div>
+  <button class="more" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-label="Меню">⋯</button>
+  <div class="menu" id="menu" hidden>
+    <div class="st" id="status">Завантаження…</div>
+    <button data-m="habits">Змінити список звичок</button>
+    <button data-m="goals">Змінити цілі</button>
+    <button data-m="auth" id="authItem">Увійти</button>
   </div>
-  <p class="status" id="status">Завантаження…</p>
-  <div class="login" id="login" hidden><p>Увійди через Google, щоб галочки зберігались і були однакові на ПК і телефоні. Це треба зробити один раз на кожному пристрої.</p><button class="primary" id="loginBtn">Увійти через Google</button></div>
-  <div class="sheet" id="sheet"></div>
-  <div class="edit" id="edit" hidden></div>
-</div>
+</header>
+<main id="main"></main>
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="today"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></svg>Сьогодні</button>
+  <button role="tab" data-tab="table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16M15 4v16"/></svg>Таблиця</button>
+  <button role="tab" data-tab="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Аналітика</button>
+  <button role="tab" data-tab="goals"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Навіщо</button>
+</nav>
 <script src="firebase-config.js"></script>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
@@ -111,168 +158,290 @@ import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,signOut,on
 import {initializeFirestore,persistentLocalCache,persistentMultipleTabManager,collection,doc,setDoc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 {
 const SECTIONS=['Тіло','Розвиток','Сім\'я','Для себе','Режим','Інше'];
+const HZ=['25 років','5 років','90 днів'];
 const DOW=['Нд','Пн','Вт','Ср','Чт','Пт','Сб'];
 const MON=['січ','лют','бер','кві','тра','чер','лип','сер','вер','жов','лис','гру'];
+const MONF=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const LS='ht_v3_cache';
-let habits=null;            // [{id,name,section}]
-const months={};            // 'YYYY-MM' -> {hid:{day:true}}
-let range=4, end=startOfDay(new Date()), editing=false, db=null, mode='loading';
-const subs={}; const writing={}; const dirty={};
+const LS='ht_v4_cache';
+const DEFAULT_HABITS=[['Ранкова зарядка','Тіло'],['Спина','Тіло'],['Очі','Тіло'],['Вечірня зарядка','Тіло'],['Силове','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Англійська','Розвиток'],['Курс / навички','Розвиток'],['Час з Марком','Сім\'я'],['Електрика з Марком','Сім\'я'],['Сімейне дозвілля','Сім\'я'],['Допомога по дому','Сім\'я'],['Щось «для себе»','Для себе'],['Кіно / серіал','Для себе'],['Гра','Для себе'],['Ліг до 00:00','Режим'],['Без зайвого телефону','Режим'],['Готував сам','Режим']].map(([name,section],i)=>({id:'d'+i,name,section}));
+const DEFAULT_GOALS=[
+ {id:'g25a',title:'Капітал ≈ $450 тис. до 60',hz:'25 років'},
+ {id:'g25b',title:'Власне житло',hz:'25 років'},
+ {id:'g25c',title:'Дохід не лише з моїх годин: 3 джерела',hz:'25 років'},
+ {id:'g25d',title:'Здоров\'я й енергія у 60',hz:'25 років'},
+ {id:'g25e',title:'Жити зараз: сім\'я, радість',hz:'25 років'},
+ {id:'g5a',title:'Подушка 6 міс. і капітал $60–75 тис.',hz:'5 років',parent:'g25a'},
+ {id:'g5b',title:'Агенція + цифрові продукти + аудиторія',hz:'5 років',parent:'g25c'},
+ {id:'g5c',title:'Стабільний сон, регулярний рух',hz:'5 років',parent:'g25d'},
+ {id:'g90a',title:'Навички: монтаж, звук, історія, колір',hz:'90 днів',parent:'g5b'},
+ {id:'g90b',title:'Telegram-канал: перші 300–500',hz:'90 днів',parent:'g5b'},
+ {id:'g90c',title:'Перший цифровий продукт',hz:'90 днів',parent:'g5b'},
+ {id:'g90d',title:'Стабільний відбій, рух 30 хв щодня',hz:'90 днів',parent:'g5c'}];
+const GOAL_BY_NAME={'Ранкова зарядка':'g5c','Спина':'g5c','Очі':'g5c','Вечірня зарядка':'g5c','Силове':'g5c','Прогулянка 10+ хв':'g90d','Читання':'g90a','Англійська':'g5b','Курс / навички':'g90a','Час з Марком':'g25e','Електрика з Марком':'g25e','Сімейне дозвілля':'g25e','Допомога по дому':'g25e','Щось «для себе»':'g25e','Кіно / серіал':'g25e','Гра':'g25e','Ліг до 00:00':'g90d','Без зайвого телефону':'g5c','Готував сам':'g25e'};
+
+let habits=null, goals=null;
+const months={};   // 'YYYY-MM' -> {done:{hid:{d:true}}, energy:{d:n}}
+let tab='today', range=4, end=sod(new Date()), day=sod(new Date()), period=30, editing=null, mode='loading';
+let fs=null, uid=null;
+const subs={}, writing={}, dirty={};
 let settingsWriting=false, settingsDirty=false;
 
-function startOfDay(d){const x=new Date(d);x.setHours(0,0,0,0);return x}
+function sod(d){const x=new Date(d);x.setHours(0,0,0,0);return x}
+function addD(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x}
 function mk(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')}
-function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function days(){
-  if(range===31){const a=new Date(end.getFullYear(),end.getMonth(),1);const n=new Date(end.getFullYear(),end.getMonth()+1,0).getDate();return Array.from({length:n},(_,i)=>new Date(a.getFullYear(),a.getMonth(),i+1))}
-  return Array.from({length:range},(_,i)=>{const x=new Date(end);x.setDate(x.getDate()-(range-1-i));return x});
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function M(k){return months[k]||(months[k]={done:{},energy:{}})}
+function isDone(h,d){const m=months[mk(d)];return !!(m&&m.done[h]&&m.done[h][d.getDate()])}
+function energyOf(d){const m=months[mk(d)];return m&&m.energy?m.energy[d.getDate()]||0:0}
+function daysBack(n){const t=sod(new Date());return Array.from({length:n},(_,i)=>addD(t,-(n-1-i)))}
+function tableDays(){
+  if(range===31){const n=new Date(end.getFullYear(),end.getMonth()+1,0).getDate();return Array.from({length:n},(_,i)=>new Date(end.getFullYear(),end.getMonth(),i+1))}
+  return Array.from({length:range},(_,i)=>addD(end,-(range-1-i)));
 }
-function isDone(h,d){const m=months[mk(d)];return !!(m&&m[h]&&m[h][d.getDate()])}
+function neededMonths(){
+  let ds;
+  if(tab==='today')ds=[day];else if(tab==='table')ds=tableDays();else ds=daysBack(tab==='stats'?Math.max(period,182):30);
+  return new Set(ds.map(mk));
+}
+const goalName=id=>{const g=(goals||[]).find(x=>x.id===id);return g?g.title:''};
 
-function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){habits=c.habits||null;Object.assign(months,c.months||{})}}catch(e){}}
-function saveCache(){try{localStorage.setItem(LS,JSON.stringify({habits,months}))}catch(e){}}
+function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){habits=c.habits||null;goals=c.goals||null;Object.assign(months,c.months||{})}}catch(e){}}
+function saveCache(){try{localStorage.setItem(LS,JSON.stringify({habits,goals,months}))}catch(e){}}
+function setStatus(t,on){document.getElementById('status').textContent=t;document.getElementById('dot').classList.toggle('on',!!on)}
 
-function setStatus(t){document.getElementById('status').textContent=t}
-function statusFor(){
-  if(mode==='db')setStatus('Синхронізується між пристроями.');
-  else if(mode==='local')setStatus('Немає зв’язку зі сховищем: зміни зберігаються лише на цьому пристрої.');
-  else setStatus('Завантаження…');
+/* ---------- header ---------- */
+function renderNav(){
+  const n=document.getElementById('nav'), t=sod(new Date()).getTime();
+  let lbl='', show=true;
+  if(tab==='today'){const isT=day.getTime()===t;lbl=`${isT?'<small>сьогодні</small>':''}${DOW[day.getDay()]}, ${day.getDate()} ${MON[day.getMonth()]}`}
+  else if(tab==='table'){const ds=tableDays(),a=ds[0],b=ds[ds.length-1];lbl=range===31?MONF[a.getMonth()]+' '+a.getFullYear():`${a.getDate()} ${MON[a.getMonth()]} – ${b.getDate()} ${MON[b.getMonth()]}`}
+  else show=false;
+  n.innerHTML=show?`<button class="arr" data-nav="-1" aria-label="Раніше">‹</button><button class="lbl" data-nav="0" title="До сьогодні">${lbl}</button><button class="arr" data-nav="1" aria-label="Пізніше">›</button>`:'';
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
 }
 
-function render(){
-  const ds=days(), today=startOfDay(new Date()).getTime();
-  ['r4','r7','r31'].forEach(id=>document.getElementById(id).setAttribute('aria-pressed',String(+id.slice(1)===range)));
-  const a=ds[0],b=ds[ds.length-1];
-  document.getElementById('rangeLabel').textContent=range===31?(['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'][a.getMonth()]+' '+a.getFullYear()):(a.getDate()+' '+MON[a.getMonth()]+' – '+b.getDate()+' '+MON[b.getMonth()]);
-  const sheet=document.getElementById('sheet');
-  if(!habits){sheet.innerHTML='<div class="empty">Завантажую список…</div>';return}
-  if(!habits.length){sheet.innerHTML='<div class="empty">Список порожній. Натисни «Змінити список» і додай звички.</div>';return}
-  const head='<tr><th class="name" scope="col">Звичка</th>'+ds.map(d=>`<th scope="col" class="${d.getTime()===today?'today':''}">${DOW[d.getDay()]}<b>${d.getDate()}</b></th>`).join('')+'</tr>';
+/* ---------- views ---------- */
+function vToday(){
+  const e=energyOf(day);
+  let h=`<div class="card"><h2>Енергія за день</h2><div class="energy">${[1,2,3,4,5].map(v=>`<button data-en="${v}" aria-pressed="${e===v}" aria-label="Енергія ${v} з 5">${v}</button>`).join('')}<span class="muted">${e?'':'1 — ледве, 5 — повно сил'}</span></div></div>`;
+  SECTIONS.forEach(s=>{
+    const hs=habits.filter(x=>(x.section||'Інше')===s);if(!hs.length)return;
+    h+=`<div class="sec">${esc(s)}</div><div class="list">`+hs.map(x=>{const on=isDone(x.id,day);const g=goalName(x.goal);return `<button class="row" data-h="${x.id}" data-d="${day.getFullYear()}-${day.getMonth()}-${day.getDate()}" aria-pressed="${on}"><span class="t"><b>${esc(x.name)}</b>${g?`<span>→ ${esc(g)}</span>`:''}</span><span class="box">${CHECK}</span></button>`}).join('')+'</div>';
+  });
+  const n=habits.filter(x=>isDone(x.id,day)).length;
+  return h+`<p class="muted" style="text-align:center;margin-top:14px">Відмічено: ${n}. Не все треба.</p>`;
+}
+function vTable(){
+  const ds=tableDays(), t=sod(new Date()).getTime();
+  const seg=`<div class="seg" role="group" aria-label="Скільки днів">${[[4,'4 дні'],[7,'Тиждень'],[31,'Місяць']].map(([r,l])=>`<button data-r="${r}" aria-pressed="${range===r}">${l}</button>`).join('')}</div>`;
+  const head='<tr><th class="name" scope="col">Звичка</th>'+ds.map(d=>`<th scope="col" class="${d.getTime()===t?'today':''}">${DOW[d.getDay()]}<b>${d.getDate()}</b></th>`).join('')+'</tr>';
   let body='';
   SECTIONS.forEach(s=>{
     const hs=habits.filter(h=>(h.section||'Інше')===s);if(!hs.length)return;
     body+=`<tr class="secrow"><td class="name">${esc(s)}</td><td colspan="${ds.length}"></td></tr>`;
-    body+=hs.map(h=>'<tr><th class="name" scope="row">'+esc(h.name)+'</th>'+ds.map(d=>{const on=isDone(h.id,d);return `<td class="c ${d.getTime()===today?'today':''}"><button class="cell" aria-pressed="${on}" aria-label="${esc(h.name)}, ${d.getDate()} ${MON[d.getMonth()]}" data-h="${h.id}" data-d="${d.getFullYear()}-${d.getMonth()}-${d.getDate()}">${CHECK}</button></td>`}).join('')+'</tr>').join('');
+    body+=hs.map(h=>'<tr><th class="name" scope="row">'+esc(h.name)+'</th>'+ds.map(d=>`<td class="c ${d.getTime()===t?'today':''}"><button class="cell" aria-pressed="${isDone(h.id,d)}" aria-label="${esc(h.name)}, ${d.getDate()} ${MON[d.getMonth()]}" data-h="${h.id}" data-d="${d.getFullYear()}-${d.getMonth()}-${d.getDate()}">${CHECK}</button></td>`).join('')+'</tr>').join('');
   });
-  const foot='<tr><td class="name">Відмічено</td>'+ds.map(d=>{const n=habits.filter(h=>isDone(h.id,d)).length;return `<td class="${d.getTime()===today?'today':''}">${n||'·'}</td>`}).join('')+'</tr>';
-  const sx=sheet.scrollLeft;
-  sheet.innerHTML=`<table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${foot}</tfoot></table>`;
-  if(range===31){const t=sheet.querySelector('th.today');if(t&&!sx)sheet.scrollLeft=Math.max(0,t.offsetLeft-200);else sheet.scrollLeft=sx}
+  const eRow='<tr><td class="name">Енергія</td>'+ds.map(d=>`<td class="${d.getTime()===t?'today':''}">${energyOf(d)||'·'}</td>`).join('')+'</tr>';
+  const foot='<tr><td class="name">Відмічено</td>'+ds.map(d=>{const n=habits.filter(h=>isDone(h.id,d)).length;return `<td class="${d.getTime()===t?'today':''}">${n||'·'}</td>`}).join('')+'</tr>';
+  return seg+`<div class="sheet" id="sheet"><table><thead>${head}</thead><tbody>${body}</tbody><tfoot>${eRow}${foot}</tfoot></table></div>`;
+}
+function pct(a,b){return b?Math.round(a/b*100):0}
+function vStats(){
+  const ds=daysBack(period), N=ds.length, t=sod(new Date());
+  const seg=`<div class="seg" role="group" aria-label="Період">${[[30,'30 днів'],[90,'90 днів']].map(([p,l])=>`<button data-p="${p}" aria-pressed="${period===p}">${l}</button>`).join('')}</div>`;
+  const cnt=d=>habits.filter(h=>isDone(h.id,d)).length;
+  const active=ds.filter(d=>cnt(d)>0).length, total=ds.reduce((s,d)=>s+cnt(d),0);
+  const en=ds.map(energyOf).filter(Boolean), avgE=en.length?(en.reduce((a,b)=>a+b,0)/en.length).toFixed(1):'—';
+  let h=seg+`<div class="kpis"><div class="kpi"><b>${active}</b><span>днів із відмітками з ${N}</span></div><div class="kpi"><b>${total}</b><span>галочок за період</span></div><div class="kpi"><b>${avgE}</b><span>середня енергія${en.length?` (${en.length} дн.)`:''}</span></div></div>`;
+  // heatmap 26 weeks
+  const hd=[];const s0=addD(t,-181);const pad=(s0.getDay()+6)%7;for(let i=0;i<pad;i++)hd.push('<i class="f"></i>');
+  const mx=Math.max(1,...daysBack(182).map(cnt));
+  daysBack(182).forEach(d=>{const c=cnt(d);const lv=c?Math.min(4,1+Math.floor((c-1)/Math.max(1,mx/4))):0;hd.push(`<i style="background:var(--h${lv})" title="${d.getDate()} ${MON[d.getMonth()]}: ${c}"></i>`)});
+  h+=`<div class="card"><h2>Ритм за пів року</h2><div class="heat" aria-label="Теплова карта: що темніше, то більше відміток за день">${hd.join('')}</div><div class="legend">менше ${[0,1,2,3,4].map(l=>`<i style="background:var(--h${l})"></i>`).join('')} більше</div></div>`;
+  // per habit
+  const rows=habits.map(x=>{const n=ds.filter(d=>isDone(x.id,d)).length;let last=-1;for(let i=0;i<400;i++){const d=addD(t,-i);if(isDone(x.id,d)){last=i;break}}
+    const wd=ds.filter(d=>d.getDay()%6!==0),we=ds.filter(d=>d.getDay()%6===0);const pw=pct(wd.filter(d=>isDone(x.id,d)).length,wd.length),pe=pct(we.filter(d=>isDone(x.id,d)).length,we.length);
+    return {x,n,last,pw,pe}}).sort((a,b)=>b.n-a.n);
+  h+=`<div class="card"><h2>По звичках</h2>`+rows.map(r=>`<div class="hrow"><span><b>${esc(r.x.name)}</b><br><span class="muted">${r.last<0?'ще не було':r.last===0?'сьогодні':r.last===1?'вчора':r.last+' дн. тому'}${r.n>=4&&Math.abs(r.pw-r.pe)>=25?(r.pw>r.pe?' · частіше в будні':' · частіше у вихідні'):''}</span></span><span class="bar"><i style="width:${pct(r.n,N)}%"></i></span><span class="n">${r.n} дн.</span></div>`).join('')+'</div>';
+  // long time no see
+  const lost=rows.filter(r=>r.last>7||(r.last<0&&false)).sort((a,b)=>b.last-a.last);
+  h+=`<div class="card"><h2>Давно не було</h2>${lost.length?lost.map(r=>`<div class="ins">${esc(r.x.name)} <span class="muted">— ${r.last} дн.</span></div>`).join(''):'<p class="muted" style="margin:0">Усе, що ти колись відмічав, траплялось за останній тиждень.</p>'}</div>`;
+  // energy by weekday
+  if(en.length>=5){const by=[1,2,3,4,5,6,0].map(w=>{const v=ds.filter(d=>d.getDay()===w).map(energyOf).filter(Boolean);return {w,a:v.length?v.reduce((p,q)=>p+q,0)/v.length:0}});
+    h+=`<div class="card"><h2>Енергія за днями тижня</h2><div class="wk">${by.map(b=>`<div><span>${b.a?b.a.toFixed(1):''}</span><i style="height:${b.a/5*90}%"></i>${DOW[b.w]}</div>`).join('')}</div></div>`}
+  h+=vLinks(ds);
+  return h;
+}
+function vLinks(ds){
+  const ins=[];
+  // energy links
+  const eDays=ds.filter(d=>energyOf(d));
+  if(eDays.length>=8){habits.forEach(x=>{const w=eDays.filter(d=>isDone(x.id,d)),wo=eDays.filter(d=>!isDone(x.id,d));if(w.length<4||wo.length<4)return;
+    const a=w.reduce((s,d)=>s+energyOf(d),0)/w.length,b=wo.reduce((s,d)=>s+energyOf(d),0)/wo.length;if(Math.abs(a-b)>=0.6)ins.push({s:Math.abs(a-b)*30,t:`У дні з «${esc(x.name)}» енергія <b>${a.toFixed(1)}</b>, без — ${b.toFixed(1)}.`})})}
+  // habit pairs
+  const nd=ds.length;
+  habits.forEach(A=>{const da=ds.filter(d=>isDone(A.id,d));if(da.length<5||nd-da.length<5)return;
+    habits.forEach(B=>{if(A.id===B.id)return;const nb=ds.filter(d=>!isDone(A.id,d));
+      const p1=da.filter(d=>isDone(B.id,d)).length/da.length,p0=nb.filter(d=>isDone(B.id,d)).length/nb.length;
+      if(p1-p0>=0.3&&da.filter(d=>isDone(B.id,d)).length>=4)ins.push({s:(p1-p0)*100,t:`Коли є «${esc(A.name)}», «${esc(B.name)}» буває у <b>${Math.round(p1*100)}%</b> днів, без неї — у ${Math.round(p0*100)}%.`})})});
+  ins.sort((a,b)=>b.s-a.s);
+  const seen=new Set(),top=ins.filter(i=>{if(seen.has(i.t))return false;seen.add(i.t);return true}).slice(0,6);
+  return `<div class="card"><h2>Зв'язки</h2>${top.length?top.map(i=>`<div class="ins">${i.t}</div>`).join('')+'<p class="muted" style="margin:10px 0 0">Це збіги, а не доказ причини. Але з них видно, що з чим ходить разом.</p>':'<p class="muted" style="margin:0">Тут з\'являться зв\'язки, коли набереться хоча б 2–3 тижні відміток. Для зв\'язків з енергією відмічай її у вкладці «Сьогодні».</p>'}</div>`;
+}
+function vGoals(){
+  if(!goals||!goals.length)return '<div class="card empty">Цілей ще немає. Меню ⋯ → «Змінити цілі».</div>';
+  const ds=daysBack(30);
+  const chips=gid=>{const hs=habits.filter(h=>h.goal===gid);return hs.length?`<div class="chips">${hs.map(h=>`<span class="chip">${esc(h.name)} <b>${ds.filter(d=>isDone(h.id,d)).length}</b></span>`).join('')}</div>`:''};
+  const node=g=>{const kids=goals.filter(c=>c.parent===g.id);return `<div class="g ${g.hz==='25 років'?'h25':''}"><div class="hz">${esc(g.hz)}</div><div class="gt">${esc(g.title)}</div>${chips(g.id)}${kids.map(node).join('')}</div>`};
+  const roots=goals.filter(g=>!g.parent||!goals.some(p=>p.id===g.parent));
+  const order=g=>HZ.indexOf(g.hz);
+  return `<div class="card"><h2>Навіщо я це роблю</h2><p class="muted" style="margin:0 0 6px">Ціль → що веде до неї → звички. Цифра — скільки днів за останні 30. Головне джерело — «Стратегія життя» в Notion; тут лише компас.</p>${roots.sort((a,b)=>order(a)-order(b)).map(node).join('')}</div>`+
+   (habits.some(h=>!h.goal)?`<div class="card"><h2>Звички без цілі</h2><div class="chips">${habits.filter(h=>!h.goal).map(h=>`<span class="chip">${esc(h.name)}</span>`).join('')}</div><p class="muted" style="margin:8px 0 0">Це нормально: не все мусить бути «для чогось».</p></div>`:'');
+}
+function vEditHabits(){
+  const so=s=>SECTIONS.map(x=>`<option${x===s?' selected':''}>${esc(x)}</option>`).join('');
+  const go=g=>'<option value="">— без цілі —</option>'+(goals||[]).map(x=>`<option value="${x.id}"${x.id===g?' selected':''}>${esc(x.hz)}: ${esc(x.title)}</option>`).join('');
+  return `<div class="card"><h2>Список звичок</h2><p class="muted" style="margin:0 0 8px">Відмічені дні не зникають, навіть якщо звичку прибрати.</p>`+
+   habits.map((h,i)=>`<div class="erow" data-i="${i}" data-k="h"><input aria-label="Назва" value="${esc(h.name)}" data-f="name" maxlength="60"><select aria-label="Розділ" data-f="section">${so(h.section||'Інше')}</select><button class="ib" data-a="up" aria-label="Вище">↑</button><button class="ib" data-a="down" aria-label="Нижче">↓</button><button class="ib del" data-a="del" aria-label="Прибрати">✕</button><select aria-label="Ціль" data-f="goal" style="grid-column:1/-1">${go(h.goal)}</select></div>`).join('')+
+   `<form class="add" id="addHabit"><input id="newName" placeholder="Нова звичка" aria-label="Нова звичка" maxlength="60"><select id="newSec" aria-label="Розділ">${so('Тіло')}</select><button class="ib">Додати</button></form><p style="margin:16px 0 0"><button class="primary" data-done="1">Готово</button></p></div>`;
+}
+function vEditGoals(){
+  const ho=z=>HZ.map(x=>`<option${x===z?' selected':''}>${x}</option>`).join('');
+  const po=(g)=>'<option value="">— верхній рівень —</option>'+goals.filter(p=>p.id!==g.id&&HZ.indexOf(p.hz)<HZ.indexOf(g.hz)).map(p=>`<option value="${p.id}"${p.id===g.parent?' selected':''}>${esc(p.title)}</option>`).join('');
+  return `<div class="card"><h2>Цілі</h2><p class="muted" style="margin:0 0 8px">Коротко, як компас. Деталі й цифри живуть у «Стратегії життя» в Notion.</p>`+
+   goals.map((g,i)=>`<div class="erow goal" data-i="${i}" data-k="g"><input aria-label="Ціль" value="${esc(g.title)}" data-f="title" maxlength="80"><select aria-label="Горизонт" data-f="hz">${ho(g.hz)}</select><select aria-label="Веде до" data-f="parent">${po(g)}</select><button class="ib del" data-a="del" aria-label="Прибрати">✕</button></div>`).join('')+
+   `<form class="add" id="addGoal"><input id="newGoal" placeholder="Нова ціль" aria-label="Нова ціль" maxlength="80"><select id="newHz" aria-label="Горизонт">${ho('90 днів')}</select><button class="ib">Додати</button></form><p style="margin:16px 0 0"><button class="primary" data-done="1">Готово</button></p></div>`;
+}
+
+function render(){
+  renderNav();
+  const m=document.getElementById('main');
+  if(mode==='login'){m.innerHTML='<div class="card"><h2>Увійди через Google</h2><p class="muted">Щоб галочки були однакові на ПК і телефоні. Один раз на кожному пристрої.</p><button class="primary" data-m="auth">Увійти через Google</button></div>';return}
+  if(!habits){m.innerHTML='<div class="card empty">Завантажую…</div>';return}
+  const focusIn=m.contains(document.activeElement)&&document.activeElement.matches('input,select');
+  if(editing){if(focusIn)return;m.innerHTML=editing==='habits'?vEditHabits():vEditGoals();return}
+  const sx=document.getElementById('sheet')?.scrollLeft;
+  m.innerHTML=tab==='today'?vToday():tab==='table'?vTable():tab==='stats'?vStats():vGoals();
+  const sh=document.getElementById('sheet');
+  if(sh){if(sx)sh.scrollLeft=sx;else if(range===31){const th=sh.querySelector('th.today');if(th)sh.scrollLeft=Math.max(0,th.offsetLeft-160)}}
   ensureSubs();
 }
 
-function renderEdit(){
-  const el=document.getElementById('edit');el.hidden=!editing;
-  document.getElementById('editBtn').setAttribute('aria-expanded',String(editing));
-  document.getElementById('editBtn').textContent=editing?'Готово':'Змінити список';
-  if(!editing)return;
-  const opts=s=>SECTIONS.map(x=>`<option${x===s?' selected':''}>${esc(x)}</option>`).join('');
-  el.innerHTML='<h2>Список звичок</h2><p>Перейменуй, перенеси в інший розділ або прибери. Відмічені дні не зникають.</p>'+
-   (habits||[]).map((h,i)=>`<div class="erow" data-i="${i}"><input aria-label="Назва" value="${esc(h.name)}" data-f="name" maxlength="60"><select aria-label="Розділ" data-f="section">${opts(h.section||'Інше')}</select><button class="ib" data-a="up" aria-label="Вище">↑</button><button class="ib" data-a="down" aria-label="Нижче">↓</button><button class="ib del" data-a="del" aria-label="Прибрати">✕</button></div>`).join('')+
-   `<form class="add" id="addForm"><input id="newName" placeholder="Нова звичка" aria-label="Нова звичка" maxlength="60"><select id="newSec" aria-label="Розділ">${opts('Тіло')}</select><button class="ib" style="padding:0 16px">Додати</button></form>`;
-}
-
-function changeHabits(fn){fn();saveCache();render();renderEdit();writeSettings()}
-let fs=null, uid=null;
+/* ---------- writes ---------- */
 const userDoc=()=>fs.collection('users').doc(uid);
 async function writeSettings(){
   if(mode!=='db')return;
   if(settingsWriting){settingsDirty=true;return}
   settingsWriting=true;
-  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set({habits:habits.map(h=>({id:h.id,name:h.name,section:h.section}))})}while(settingsDirty)}
-  catch(e){setStatus('Не вдалося зберегти список ('+(e&&e.code||'помилка')+'). Зміни лишились на цьому пристрої.')}
+  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set(JSON.parse(JSON.stringify({habits,goals})))}while(settingsDirty)}
+  catch(e){setStatus('Не вдалося зберегти ('+(e&&e.code||'помилка')+'). Зміни лишились на цьому пристрої.')}
   settingsWriting=false;
 }
 async function writeMonth(k){
   if(mode!=='db')return;
   if(writing[k]){dirty[k]=true;return}
   writing[k]=true;
-  try{do{dirty[k]=false;await userDoc().collection('months').doc(k).set({done:JSON.parse(JSON.stringify(months[k]||{}))})}while(dirty[k])}
+  try{do{dirty[k]=false;await userDoc().collection('months').doc(k).set(JSON.parse(JSON.stringify(M(k))))}while(dirty[k])}
   catch(e){setStatus('Не вдалося зберегти ('+(e&&e.code||'помилка')+'). Відмітка лишилась на цьому пристрої.')}
   writing[k]=false;
 }
 function ensureSubs(){
   if(mode!=='db')return;
-  new Set(days().map(mk)).forEach(k=>{
+  neededMonths().forEach(k=>{
     if(subs[k])return;
-    subs[k]=userDoc().collection('months').doc(k).onSnapshot({includeMetadataChanges:false},s=>{
+    subs[k]=userDoc().collection('months').doc(k).onSnapshot(s=>{
       if(writing[k]||dirty[k])return;
-      if(s.exists){months[k]=JSON.parse(JSON.stringify(s.data().done||{}))}
-      else if(!s.metadata.fromCache&&months[k]&&Object.keys(months[k]).length){writeMonth(k)}
+      if(s.exists){const d=s.data();months[k]={done:JSON.parse(JSON.stringify(d.done||{})),energy:JSON.parse(JSON.stringify(d.energy||{}))}}
+      else if(!s.metadata.fromCache&&months[k]&&(Object.keys(M(k).done).length||Object.keys(M(k).energy).length))writeMonth(k);
       saveCache();render();
-    },e=>{});
+    },()=>{});
   });
 }
+function changeSettings(fn){fn();saveCache();render();writeSettings()}
+
+/* ---------- events ---------- */
+const menu=document.getElementById('menu'),moreBtn=document.getElementById('moreBtn');
+function closeMenu(){menu.hidden=true;moreBtn.setAttribute('aria-expanded','false')}
+moreBtn.onclick=e=>{e.stopPropagation();menu.hidden=!menu.hidden;moreBtn.setAttribute('aria-expanded',String(!menu.hidden))};
+let doAuth=()=>{};
 document.addEventListener('click',e=>{
-  const c=e.target.closest('.cell');
-  if(c){const [y,m,d]=c.dataset.d.split('-').map(Number);const k=y+'-'+String(m+1).padStart(2,'0');const h=c.dataset.h;
-    months[k]=months[k]||{};months[k][h]=months[k][h]||{};
-    if(months[k][h][d])delete months[k][h][d];else months[k][h][d]=true;
-    if(!Object.keys(months[k][h]).length)delete months[k][h];
+  if(!menu.hidden&&!menu.contains(e.target)&&e.target!==moreBtn)closeMenu();
+  const mm=e.target.closest('[data-m]');
+  if(mm){closeMenu();const v=mm.dataset.m;if(v==='auth'){doAuth();return}if(!habits)return;editing=v;if(v==='goals'&&!goals)goals=[];render();window.scrollTo(0,0);return}
+  const tb=e.target.closest('[data-tab]');if(tb){tab=tb.dataset.tab;editing=null;render();window.scrollTo(0,0);return}
+  const nv=e.target.closest('[data-nav]');
+  if(nv){const s=+nv.dataset.nav;
+    if(tab==='today'){day=s===0?sod(new Date()):addD(day,s)}
+    else{if(s===0)end=sod(new Date());else if(range===31)end=new Date(end.getFullYear(),end.getMonth()+(s>0?2:0),0);else end=addD(end,s*range)}
+    render();return}
+  const c=e.target.closest('[data-h][data-d]');
+  if(c){const [y,mo,d]=c.dataset.d.split('-').map(Number);const k=y+'-'+String(mo+1).padStart(2,'0');const h=c.dataset.h;const m=M(k);
+    m.done[h]=m.done[h]||{};if(m.done[h][d])delete m.done[h][d];else m.done[h][d]=true;if(!Object.keys(m.done[h]).length)delete m.done[h];
     saveCache();render();writeMonth(k);return}
-  const r=e.target.closest('[data-r]');if(r){range=+r.dataset.r;if(range!==31)end=startOfDay(new Date());render();return}
+  const en=e.target.closest('[data-en]');
+  if(en){const k=mk(day),m=M(k),v=+en.dataset.en,d=day.getDate();if(m.energy[d]===v)delete m.energy[d];else m.energy[d]=v;saveCache();render();writeMonth(k);return}
+  const r=e.target.closest('[data-r]');if(r){range=+r.dataset.r;end=sod(new Date());render();return}
+  const p=e.target.closest('[data-p]');if(p){period=+p.dataset.p;render();return}
+  if(e.target.closest('[data-done]')){editing=null;render();return}
   const a=e.target.closest('.ib[data-a]');
-  if(a){const i=+a.closest('.erow').dataset.i;
-    if(a.dataset.a==='up'&&i>0)changeHabits(()=>{[habits[i-1],habits[i]]=[habits[i],habits[i-1]]});
-    if(a.dataset.a==='down'&&i<habits.length-1)changeHabits(()=>{[habits[i+1],habits[i]]=[habits[i],habits[i+1]]});
-    if(a.dataset.a==='del'){if(a.dataset.ask==='true')changeHabits(()=>{habits.splice(i,1)});else{a.dataset.ask='true';a.textContent='Точно?';setTimeout(()=>{if(a.isConnected){a.dataset.ask='false';a.textContent='✕'}},3000)}}
+  if(a){const row=a.closest('.erow'),i=+row.dataset.i,arr=row.dataset.k==='h'?habits:goals;
+    if(a.dataset.a==='up'&&i>0)changeSettings(()=>{[arr[i-1],arr[i]]=[arr[i],arr[i-1]]});
+    if(a.dataset.a==='down'&&i<arr.length-1)changeSettings(()=>{[arr[i+1],arr[i]]=[arr[i],arr[i+1]]});
+    if(a.dataset.a==='del'){if(a.dataset.ask==='true')changeSettings(()=>{const [x]=arr.splice(i,1);if(row.dataset.k==='g'){habits.forEach(h=>{if(h.goal===x.id)delete h.goal});goals.forEach(g=>{if(g.parent===x.id)delete g.parent})}});
+      else{a.dataset.ask='true';a.textContent='Точно?';setTimeout(()=>{if(a.isConnected){a.dataset.ask='false';a.textContent='✕'}},3000)}}
   }
 });
 document.addEventListener('change',e=>{
   const f=e.target.dataset&&e.target.dataset.f;if(!f)return;
-  const i=+e.target.closest('.erow').dataset.i;const v=e.target.value.trim();if(f==='name'&&!v)return;
-  changeHabits(()=>{habits[i][f]=v});
+  const row=e.target.closest('.erow'),i=+row.dataset.i,arr=row.dataset.k==='h'?habits:goals,v=e.target.value.trim();
+  if((f==='name'||f==='title')&&!v)return;
+  e.target.blur();
+  changeSettings(()=>{if(v)arr[i][f]=v;else delete arr[i][f];if(f==='hz'&&arr[i].parent){const p=goals.find(g=>g.id===arr[i].parent);if(!p||HZ.indexOf(p.hz)>=HZ.indexOf(v))delete arr[i].parent}});
 });
 document.addEventListener('submit',e=>{
-  if(e.target.id!=='addForm')return;e.preventDefault();
-  const n=document.getElementById('newName').value.trim();if(!n)return;
-  const s=document.getElementById('newSec').value;
-  changeHabits(()=>{(habits=habits||[]).push({id:'h'+Date.now().toString(36),name:n,section:s})});
-  document.getElementById('newName').focus();
+  e.preventDefault();
+  if(e.target.id==='addHabit'){const n=document.getElementById('newName').value.trim();if(!n)return;const s=document.getElementById('newSec').value;changeSettings(()=>habits.push({id:'h'+Date.now().toString(36),name:n,section:s}))}
+  if(e.target.id==='addGoal'){const n=document.getElementById('newGoal').value.trim();if(!n)return;const z=document.getElementById('newHz').value;changeSettings(()=>goals.push({id:'g'+Date.now().toString(36),title:n,hz:z}))}
 });
-document.getElementById('prev').onclick=()=>{if(range===31)end=new Date(end.getFullYear(),end.getMonth(),0);else end.setDate(end.getDate()-range);render()};
-document.getElementById('next').onclick=()=>{if(range===31)end=new Date(end.getFullYear(),end.getMonth()+2,0);else end.setDate(end.getDate()+range);render()};
-document.getElementById('todayBtn').onclick=()=>{end=startOfDay(new Date());render()};
-document.getElementById('editBtn').onclick=()=>{editing=!editing;renderEdit()};
 
+/* ---------- start ---------- */
 loadCache();render();
-
-const DEFAULTS=[['Ранкова зарядка','Тіло'],['Спина','Тіло'],['Очі','Тіло'],['Вечірня зарядка','Тіло'],['Силове','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Англійська','Розвиток'],['Курс / навички','Розвиток'],['Час з Марком','Сім\'я'],['Електрика з Марком','Сім\'я'],['Сімейне дозвілля','Сім\'я'],['Допомога по дому','Сім\'я'],['Щось «для себе»','Для себе'],['Кіно / серіал','Для себе'],['Гра','Для себе'],['Ліг до 00:00','Режим'],['Без зайвого телефону','Режим'],['Готував сам','Режим']].map(([name,section],i)=>({id:'d'+i,name,section}));
-function goLocal(msg){mode='local';if(!habits)habits=DEFAULTS.slice();setStatus(msg);render()}
+function goLocal(msg){mode='local';if(!habits)habits=DEFAULT_HABITS.map(h=>({...h}));migrate();setStatus(msg,false);render()}
+function migrate(){let ch=false;if(!goals){goals=JSON.parse(JSON.stringify(DEFAULT_GOALS));ch=true;habits.forEach(h=>{if(!h.goal&&GOAL_BY_NAME[h.name])h.goal=GOAL_BY_NAME[h.name]})}return ch}
 const cfg=window.FIREBASE_CONFIG;
-if(!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){
-  goLocal('Сховище ще не підключене: галочки зберігаються лише на цьому пристрої.');
-}else{
+if(!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){goLocal('Сховище не підключене: дані лише на цьому пристрої.')}
+else{
   const app=initializeApp(cfg);
   let raw;
   try{raw=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentMultipleTabManager()})},cfg.databaseId||'(default)')}
   catch(e){raw=initializeFirestore(app,{},cfg.databaseId||'(default)')}
-  const wrapSnap=s=>({exists:s.exists(),data:()=>s.data(),metadata:s.metadata});
-  const D=ref=>({collection:n=>C(collection(ref,n)),set:d=>setDoc(ref,d),onSnapshot:(o,n,e)=>{if(typeof o==='function'){e=n;n=o}return onSnapshot(ref,x=>n(wrapSnap(x)),e)}});
+  const wrap=s=>({exists:s.exists(),data:()=>s.data(),metadata:s.metadata});
+  const D=ref=>({collection:n=>C(collection(ref,n)),set:d=>setDoc(ref,d),onSnapshot:(n,e)=>onSnapshot(ref,x=>n(wrap(x)),e)});
   const C=ref=>({doc:id=>D(doc(ref,id))});
   fs={collection:n=>C(collection(raw,n))};
-  const A=getAuth(app);
-  const auth={signInWithPopup:p=>signInWithPopup(A,p),signInWithRedirect:p=>signInWithRedirect(A,p),signOut:()=>signOut(A),onAuthStateChanged:f=>onAuthStateChanged(A,f)};
-  const provider=new GoogleAuthProvider();
-  const login=async()=>{try{await auth.signInWithPopup(provider)}catch(e){if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'))auth.signInWithRedirect(provider);else setStatus('Не вдалося увійти ('+(e&&e.code||'помилка')+').')}};
-  document.getElementById('loginBtn').onclick=login;
-  const authBtn=document.getElementById('authBtn');
-  authBtn.onclick=()=>{if(uid){if(authBtn.dataset.ask==='true'){auth.signOut()}else{authBtn.dataset.ask='true';authBtn.textContent='Точно вийти?';setTimeout(()=>{authBtn.dataset.ask='false';authBtn.textContent='Вийти'},3000)}}else login()};
+  const A=getAuth(app), provider=new GoogleAuthProvider();
+  const authItem=document.getElementById('authItem');
+  doAuth=async()=>{
+    if(uid){if(authItem.dataset.ask==='true'){signOut(A)}else{authItem.dataset.ask='true';authItem.textContent='Точно вийти? Натисни ще раз';menu.hidden=false;setTimeout(()=>{authItem.dataset.ask='false';authItem.textContent='Вийти'},3000)}return}
+    try{await signInWithPopup(A,provider)}catch(e){if(e&&(e.code==='auth/popup-blocked'||e.code==='auth/operation-not-supported-in-this-environment'))signInWithRedirect(A,provider);else setStatus('Не вдалося увійти ('+(e&&e.code||'помилка')+').')}
+  };
   let unsubSettings=null;
-  auth.onAuthStateChanged(u=>{
+  onAuthStateChanged(A,u=>{
     Object.keys(subs).forEach(k=>{subs[k]();delete subs[k]});
     if(unsubSettings){unsubSettings();unsubSettings=null}
-    if(!u){uid=null;mode='local';if(!habits)habits=DEFAULTS.slice();document.getElementById('login').hidden=false;authBtn.hidden=true;setStatus('Без входу галочки зберігаються лише на цьому пристрої.');render();return}
-    uid=u.uid;document.getElementById('login').hidden=true;authBtn.hidden=false;authBtn.textContent='Вийти';
-    setStatus('Підключаюсь…');
-    const timer=setTimeout(()=>{if(mode!=='db')setStatus('Немає зв’язку зі сховищем. Відмітки збережуться, коли з’явиться інтернет.')},10000);
+    if(!u){uid=null;mode='login';authItem.textContent='Увійти';setStatus('Не виконано вхід',false);render();return}
+    uid=u.uid;authItem.textContent='Вийти';setStatus('Підключаюсь…',false);
+    if(mode==='login')mode='loading';
+    const timer=setTimeout(()=>{if(mode!=='db')setStatus('Немає зв’язку зі сховищем. Відмітки збережуться, коли з’явиться інтернет.',false)},10000);
     unsubSettings=userDoc().collection('meta').doc('settings').onSnapshot(s=>{
-      if(s.exists){if(!settingsWriting&&!settingsDirty)habits=(s.data().habits||[]).map(h=>({id:h.id,name:h.name,section:h.section}))}
-      else if(!s.metadata.fromCache){if(!habits||!habits.length)habits=DEFAULTS.slice();mode='db';writeSettings()}
-      if(!s.metadata.fromCache){clearTimeout(timer);mode='db';setStatus('Синхронізується між пристроями · '+(u.email||''))}
-      saveCache();render();if(!document.getElementById('edit').contains(document.activeElement))renderEdit();ensureSubs();
-    },e=>{clearTimeout(timer);goLocal('Помилка доступу до сховища ('+(e&&e.code||'')+'). Перевір правила Firestore.')});
+      let needWrite=false;
+      if(s.exists){if(!settingsWriting&&!settingsDirty){const d=s.data();habits=(d.habits||[]).map(h=>({...h}));goals=d.goals?d.goals.map(g=>({...g})):null;needWrite=migrate()}}
+      else if(!s.metadata.fromCache){if(!habits||!habits.length)habits=DEFAULT_HABITS.map(h=>({...h}));goals=null;migrate();needWrite=true}
+      if(!s.metadata.fromCache){clearTimeout(timer);mode='db';setStatus('Синхронізується · '+(u.email||''),true)}
+      if(needWrite&&mode==='db')writeSettings();
+      saveCache();render();
+    },e=>{clearTimeout(timer);goLocal('Помилка доступу до сховища ('+(e&&e.code||'')+').')});
   });
 }
 }
