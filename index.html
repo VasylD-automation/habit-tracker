@@ -34,6 +34,11 @@ button{font:inherit;color:inherit}
 .more{width:44px;min-height:44px;border:0;background:none;cursor:pointer;border-radius:10px;font-size:22px;line-height:1}
 .menu{position:absolute;right:max(4vw,12px);top:calc(100% - 4px);background:var(--paper);border:1px solid var(--line2);border-radius:12px;box-shadow:0 10px 30px rgb(0 0 0/.15);padding:6px;display:grid;min-width:220px}
 .menu[hidden]{display:none}
+.menu a{display:flex;align-items:center;padding:0 12px;min-height:44px;border-radius:8px;font-weight:700;color:var(--ok);text-decoration:none}
+.menu a:hover{background:var(--bg)}
+#linksBox:not(:empty){border-bottom:1px solid var(--line);margin-bottom:4px;padding-bottom:4px}
+.erow.link{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) 44px 44px 44px}
+textarea{font:inherit;font-size:15px;width:100%;min-height:110px;padding:10px;border:1px solid var(--line2);border-radius:9px;background:var(--paper);color:var(--ink)}
 .menu button{background:none;border:0;text-align:left;padding:0 12px;min-height:44px;border-radius:8px;cursor:pointer;font-weight:600}
 .menu button:hover{background:var(--bg)}
 .menu .st{font-size:13px;color:var(--muted);padding:6px 12px 8px;border-bottom:1px solid var(--line);margin-bottom:4px}
@@ -139,8 +144,10 @@ input,select{font:inherit;font-size:16px;min-height:44px;padding:0 10px;border:1
   <button class="more" id="moreBtn" aria-haspopup="true" aria-expanded="false" aria-label="Меню">⋯</button>
   <div class="menu" id="menu" hidden>
     <div class="st" id="status">Завантаження…</div>
+    <div id="linksBox"></div>
     <button data-m="habits">Змінити список звичок</button>
     <button data-m="goals">Змінити цілі</button>
+    <button data-m="links">Змінити посилання</button>
     <button data-m="auth" id="authItem">Увійти</button>
   </div>
 </header>
@@ -164,6 +171,7 @@ const MON=['січ','лют','бер','кві','тра','чер','лип','се�
 const MONF=['Січень','Лютий','Березень','Квітень','Травень','Червень','Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'];
 const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LS='ht_v4_cache';
+const STARTER_HABITS=[['Зарядка','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Час із сім\'єю','Сім\'я'],['Щось «для себе»','Для себе'],['Ліг вчасно','Режим'],['Без зайвого телефону','Режим']].map(([name,section],i)=>({id:'s'+i,name,section}));
 const DEFAULT_HABITS=[['Ранкова зарядка','Тіло'],['Спина','Тіло'],['Очі','Тіло'],['Вечірня зарядка','Тіло'],['Силове','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Англійська','Розвиток'],['Курс / навички','Розвиток'],['Час з Марком','Сім\'я'],['Електрика з Марком','Сім\'я'],['Сімейне дозвілля','Сім\'я'],['Допомога по дому','Сім\'я'],['Щось «для себе»','Для себе'],['Кіно / серіал','Для себе'],['Гра','Для себе'],['Ліг до 00:00','Режим'],['Без зайвого телефону','Режим'],['Готував сам','Режим']].map(([name,section],i)=>({id:'d'+i,name,section}));
 const GOALS_V=2;
 const DEFAULT_GOALS=[
@@ -183,7 +191,7 @@ const DEFAULT_GOALS=[
  {id:'g90t',title:'Турнік: зафіксувати старт',hz:'90 днів',parent:'g5w'}];
 const GOAL_BY_NAME={'Ранкова зарядка':'g5s','Спина':'p2','Очі':'p2','Вечірня зарядка':'g5s','Силове':'g5w','Прогулянка 10+ хв':'g90d','Читання':'g90a','Англійська':'g5b','Курс / навички':'g90a','Час з Марком':'g5m','Електрика з Марком':'g5m','Сімейне дозвілля':'p1','Допомога по дому':'p1','Щось «для себе»':'p5','Кіно / серіал':'p5','Гра':'p5','Ліг до 00:00':'g90d','Без зайвого телефону':'g5s','Готував сам':'p5'};
 
-let habits=null, goals=null, goalsV=0;
+let habits=null, goals=null, goalsV=0, links=[], cacheUid=null;
 const months={};   // 'YYYY-MM' -> {done:{hid:{d:true}}, energy:{d:n}}
 let tab='today', range=4, end=sod(new Date()), day=sod(new Date()), period=30, editing=null, mode='loading';
 let fs=null, uid=null;
@@ -209,8 +217,9 @@ function neededMonths(){
 }
 const goalName=id=>{const g=(goals||[]).find(x=>x.id===id);return g?g.title:''};
 
-function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){habits=c.habits||null;goals=c.goals||null;goalsV=c.goalsV||0;Object.assign(months,c.months||{})}}catch(e){}}
-function saveCache(){try{localStorage.setItem(LS,JSON.stringify({habits,goals,goalsV,months}))}catch(e){}}
+function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){cacheUid=c.uid||null;habits=c.habits||null;goals=c.goals||null;goalsV=c.goalsV||0;links=c.links||[];Object.assign(months,c.months||{})}}catch(e){}}
+function saveCache(){try{localStorage.setItem(LS,JSON.stringify({uid:cacheUid,habits,goals,goalsV,links,months}))}catch(e){}}
+function renderLinks(){const b=document.getElementById('linksBox');if(!b)return;b.innerHTML=(links||[]).filter(l=>/^https:\/\//.test(l.u)).map(l=>`<a href="${esc(l.u)}" target="_blank" rel="noopener">${esc(l.t||l.u)}</a>`).join('')}
 function setStatus(t,on){document.getElementById('status').textContent=t;document.getElementById('dot').classList.toggle('on',!!on)}
 
 /* ---------- header ---------- */
@@ -309,6 +318,13 @@ function vEditHabits(){
    habits.map((h,i)=>`<div class="erow" data-i="${i}" data-k="h"><input aria-label="Назва" value="${esc(h.name)}" data-f="name" maxlength="60"><select aria-label="Розділ" data-f="section">${so(h.section||'Інше')}</select><button class="ib" data-a="up" aria-label="Вище">↑</button><button class="ib" data-a="down" aria-label="Нижче">↓</button><button class="ib del" data-a="del" aria-label="Прибрати">✕</button><select aria-label="Ціль" data-f="goal" style="grid-column:1/-1">${go(h.goal)}</select></div>`).join('')+
    `<form class="add" id="addHabit"><input id="newName" placeholder="Нова звичка" aria-label="Нова звичка" maxlength="60"><select id="newSec" aria-label="Розділ">${so('Тіло')}</select><button class="ib">Додати</button></form><p style="margin:16px 0 0"><button class="primary" data-done="1">Готово</button></p></div>`;
 }
+function vEditLinks(){
+  return `<div class="card"><h2>Мої посилання</h2><p class="muted" style="margin:0 0 8px">Вони з'являються в меню ⋯ і видні лише тобі, у твоєму акаунті. Відкриваються ті сторінки лише там, де ти увійшов (Notion, Claude).</p>`+
+   links.map((l,i)=>`<div class="erow link" data-i="${i}" data-k="l"><input aria-label="Назва" value="${esc(l.t)}" data-f="t" maxlength="60"><input aria-label="Посилання" value="${esc(l.u)}" data-f="u" inputmode="url"><button class="ib" data-a="up" aria-label="Вище">↑</button><button class="ib" data-a="down" aria-label="Нижче">↓</button><button class="ib del" data-a="del" aria-label="Прибрати">✕</button></div>`).join('')+
+   `<form class="add" id="addLink" style="grid-template-columns:minmax(0,1fr) minmax(0,1.6fr) auto"><input id="newLinkT" placeholder="Назва" aria-label="Назва" maxlength="60"><input id="newLinkU" placeholder="https://…" aria-label="Посилання" inputmode="url"><button class="ib">Додати</button></form>`+
+   `<form id="pasteLinks" style="margin-top:16px"><label class="muted" for="pasteArea">Або встав списком, кожне з нового рядка: Назва | https://…</label><textarea id="pasteArea"></textarea><button class="ib" style="margin-top:6px">Додати зі списку</button></form>`+
+   `<p style="margin:16px 0 0"><button class="primary" data-done="1">Готово</button></p></div>`;
+}
 function vEditGoals(){
   const ho=z=>HZ.map(x=>`<option${x===z?' selected':''}>${x}</option>`).join('');
   const po=(g)=>'<option value="">— верхній рівень —</option>'+goals.filter(p=>p.id!==g.id&&HZ.indexOf(p.hz)<HZ.indexOf(g.hz)).map(p=>`<option value="${p.id}"${p.id===g.parent?' selected':''}>${esc(p.title)}</option>`).join('');
@@ -318,12 +334,12 @@ function vEditGoals(){
 }
 
 function render(){
-  renderNav();
+  renderNav();renderLinks();
   const m=document.getElementById('main');
   if(mode==='login'){m.innerHTML='<div class="card"><h2>Увійди через Google</h2><p class="muted">Щоб галочки були однакові на ПК і телефоні. Один раз на кожному пристрої.</p><button class="primary" data-m="auth">Увійти через Google</button></div>';return}
   if(!habits){m.innerHTML='<div class="card empty">Завантажую…</div>';return}
   const focusIn=m.contains(document.activeElement)&&document.activeElement.matches('input,select');
-  if(editing){if(focusIn)return;m.innerHTML=editing==='habits'?vEditHabits():vEditGoals();return}
+  if(editing){if(focusIn)return;m.innerHTML=editing==='habits'?vEditHabits():editing==='links'?vEditLinks():vEditGoals();return}
   const sx=document.getElementById('sheet')?.scrollLeft;
   m.innerHTML=tab==='today'?vToday():tab==='table'?vTable():tab==='stats'?vStats():vGoals();
   const sh=document.getElementById('sheet');
@@ -337,7 +353,7 @@ async function writeSettings(){
   if(mode!=='db')return;
   if(settingsWriting){settingsDirty=true;return}
   settingsWriting=true;
-  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set(JSON.parse(JSON.stringify({habits,goals,goalsV})))}while(settingsDirty)}
+  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set(JSON.parse(JSON.stringify({habits,goals,goalsV,links})))}while(settingsDirty)}
   catch(e){setStatus('Не вдалося зберегти ('+(e&&e.code||'помилка')+'). Зміни лишились на цьому пристрої.')}
   settingsWriting=false;
 }
@@ -388,7 +404,7 @@ document.addEventListener('click',e=>{
   const p=e.target.closest('[data-p]');if(p){period=+p.dataset.p;render();return}
   if(e.target.closest('[data-done]')){editing=null;render();return}
   const a=e.target.closest('.ib[data-a]');
-  if(a){const row=a.closest('.erow'),i=+row.dataset.i,arr=row.dataset.k==='h'?habits:goals;
+  if(a){const row=a.closest('.erow'),i=+row.dataset.i,arr=row.dataset.k==='h'?habits:row.dataset.k==='l'?links:goals;
     if(a.dataset.a==='up'&&i>0)changeSettings(()=>{[arr[i-1],arr[i]]=[arr[i],arr[i-1]]});
     if(a.dataset.a==='down'&&i<arr.length-1)changeSettings(()=>{[arr[i+1],arr[i]]=[arr[i],arr[i+1]]});
     if(a.dataset.a==='del'){if(a.dataset.ask==='true')changeSettings(()=>{const [x]=arr.splice(i,1);if(row.dataset.k==='g'){habits.forEach(h=>{if(h.goal===x.id)delete h.goal});goals.forEach(g=>{if(g.parent===x.id)delete g.parent})}});
@@ -397,14 +413,17 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('change',e=>{
   const f=e.target.dataset&&e.target.dataset.f;if(!f)return;
-  const row=e.target.closest('.erow'),i=+row.dataset.i,arr=row.dataset.k==='h'?habits:goals,v=e.target.value.trim();
-  if((f==='name'||f==='title')&&!v)return;
+  const row=e.target.closest('.erow'),i=+row.dataset.i,arr=row.dataset.k==='h'?habits:row.dataset.k==='l'?links:goals,v=e.target.value.trim();
+  if(f==='u'&&!/^https:\/\//.test(v)){setStatus('Посилання має починатися з https://');return}
+  if((f==='name'||f==='title'||f==='t'||f==='u')&&!v)return;
   e.target.blur();
   changeSettings(()=>{if(v)arr[i][f]=v;else delete arr[i][f];if(f==='hz'&&arr[i].parent){const p=goals.find(g=>g.id===arr[i].parent);if(!p||HZ.indexOf(p.hz)>=HZ.indexOf(v))delete arr[i].parent}});
 });
 document.addEventListener('submit',e=>{
   e.preventDefault();
   if(e.target.id==='addHabit'){const n=document.getElementById('newName').value.trim();if(!n)return;const s=document.getElementById('newSec').value;changeSettings(()=>habits.push({id:'h'+Date.now().toString(36),name:n,section:s}))}
+  if(e.target.id==='addLink'){const t=document.getElementById('newLinkT').value.trim(),u=document.getElementById('newLinkU').value.trim();if(!/^https:\/\//.test(u))return;changeSettings(()=>links.push({t:t||u,u}))}
+  if(e.target.id==='pasteLinks'){const add=document.getElementById('pasteArea').value.split('\n').map(x=>x.split('|')).filter(p=>p.length>=2).map(p=>({t:p[0].trim(),u:p.slice(1).join('|').trim()})).filter(l=>/^https:\/\//.test(l.u));if(add.length)changeSettings(()=>links.push(...add))}
   if(e.target.id==='addGoal'){const n=document.getElementById('newGoal').value.trim();if(!n)return;const z=document.getElementById('newHz').value;changeSettings(()=>goals.push({id:'g'+Date.now().toString(36),title:n,hz:z}))}
 });
 
@@ -433,14 +452,16 @@ else{
   onAuthStateChanged(A,u=>{
     Object.keys(subs).forEach(k=>{subs[k]();delete subs[k]});
     if(unsubSettings){unsubSettings();unsubSettings=null}
-    if(!u){uid=null;mode='login';authItem.textContent='Увійти';setStatus('Не виконано вхід',false);render();return}
+    if(!u){uid=null;mode='login';links=[];renderLinks();authItem.textContent='Увійти';setStatus('Не виконано вхід',false);render();return}
+    if(cacheUid&&cacheUid!==u.uid){habits=null;goals=null;goalsV=0;links=[];Object.keys(months).forEach(k=>delete months[k])}
+    cacheUid=u.uid;
     uid=u.uid;authItem.textContent='Вийти';setStatus('Підключаюсь…',false);
     if(mode==='login')mode='loading';
     const timer=setTimeout(()=>{if(mode!=='db')setStatus('Немає зв’язку зі сховищем. Відмітки збережуться, коли з’явиться інтернет.',false)},10000);
     unsubSettings=userDoc().collection('meta').doc('settings').onSnapshot(s=>{
       let needWrite=false;
-      if(s.exists){if(!settingsWriting&&!settingsDirty){const d=s.data();habits=(d.habits||[]).map(h=>({...h}));goals=d.goals?d.goals.map(g=>({...g})):null;goalsV=d.goalsV||(d.goals?1:0);needWrite=migrate()}}
-      else if(!s.metadata.fromCache){if(!habits||!habits.length)habits=DEFAULT_HABITS.map(h=>({...h}));goals=null;migrate();needWrite=true}
+      if(s.exists){if(!settingsWriting&&!settingsDirty){const d=s.data();habits=(d.habits||[]).map(h=>({...h}));links=(d.links||[]).map(l=>({...l}));goals=d.goals?d.goals.map(g=>({...g})):null;goalsV=d.goalsV||(d.goals?1:0);needWrite=migrate()}}
+      else if(!s.metadata.fromCache){if(!habits||!habits.length)habits=STARTER_HABITS.map(h=>({...h}));goals=[];goalsV=GOALS_V;links=[];needWrite=true}
       if(!s.metadata.fromCache){clearTimeout(timer);mode='db';setStatus('Синхронізується · '+(u.email||''),true)}
       if(needWrite&&mode==='db')writeSettings();
       saveCache();render();
