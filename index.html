@@ -165,22 +165,25 @@ const MONF=['Січень','Лютий','Березень','Квітень','Т�
 const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const LS='ht_v4_cache';
 const DEFAULT_HABITS=[['Ранкова зарядка','Тіло'],['Спина','Тіло'],['Очі','Тіло'],['Вечірня зарядка','Тіло'],['Силове','Тіло'],['Прогулянка 10+ хв','Тіло'],['Читання','Розвиток'],['Англійська','Розвиток'],['Курс / навички','Розвиток'],['Час з Марком','Сім\'я'],['Електрика з Марком','Сім\'я'],['Сімейне дозвілля','Сім\'я'],['Допомога по дому','Сім\'я'],['Щось «для себе»','Для себе'],['Кіно / серіал','Для себе'],['Гра','Для себе'],['Ліг до 00:00','Режим'],['Без зайвого телефону','Режим'],['Готував сам','Режим']].map(([name,section],i)=>({id:'d'+i,name,section}));
+const GOALS_V=2;
 const DEFAULT_GOALS=[
- {id:'g25a',title:'Капітал ≈ $450 тис. до 60',hz:'25 років'},
- {id:'g25b',title:'Власне житло',hz:'25 років'},
- {id:'g25c',title:'Дохід не лише з моїх годин: 3 джерела',hz:'25 років'},
- {id:'g25d',title:'Здоров\'я й енергія у 60',hz:'25 років'},
- {id:'g25e',title:'Жити зараз: сім\'я, радість',hz:'25 років'},
- {id:'g5a',title:'Подушка 6 міс. і капітал $60–75 тис.',hz:'5 років',parent:'g25a'},
- {id:'g5b',title:'Агенція + цифрові продукти + аудиторія',hz:'5 років',parent:'g25c'},
- {id:'g5c',title:'Стабільний сон, регулярний рух',hz:'5 років',parent:'g25d'},
+ {id:'p1',title:'Марк і сім\'я: самостійний, упевнений, добрі стосунки',hz:'25 років'},
+ {id:'p2',title:'Здоров\'я: активний і без болю до 80',hz:'25 років'},
+ {id:'p3',title:'Гроші й дім: пасивний дохід і власний будинок',hz:'25 років'},
+ {id:'p4',title:'Справа: 3 джерела доходу',hz:'25 років'},
+ {id:'p5',title:'Для душі: побачити світ, радіти зараз',hz:'25 років'},
+ {id:'g5m',title:'Щодня час з Марком, разом руками',hz:'5 років',parent:'p1'},
+ {id:'g5w',title:'Вага 80 кг, 10 підтягувань',hz:'5 років',parent:'p2'},
+ {id:'g5s',title:'Сон 7+ год, рух 150 хв на тиждень',hz:'5 років',parent:'p2'},
+ {id:'g5f',title:'Подушка 6 міс. і капітал $60–75 тис.',hz:'5 років',parent:'p3'},
+ {id:'g5b',title:'Агенція + продукти + аудиторія',hz:'5 років',parent:'p4'},
  {id:'g90a',title:'Навички: монтаж, звук, історія, колір',hz:'90 днів',parent:'g5b'},
  {id:'g90b',title:'Telegram-канал: перші 300–500',hz:'90 днів',parent:'g5b'},
- {id:'g90c',title:'Перший цифровий продукт',hz:'90 днів',parent:'g5b'},
- {id:'g90d',title:'Стабільний відбій, рух 30 хв щодня',hz:'90 днів',parent:'g5c'}];
-const GOAL_BY_NAME={'Ранкова зарядка':'g5c','Спина':'g5c','Очі':'g5c','Вечірня зарядка':'g5c','Силове':'g5c','Прогулянка 10+ хв':'g90d','Читання':'g90a','Англійська':'g5b','Курс / навички':'g90a','Час з Марком':'g25e','Електрика з Марком':'g25e','Сімейне дозвілля':'g25e','Допомога по дому':'g25e','Щось «для себе»':'g25e','Кіно / серіал':'g25e','Гра':'g25e','Ліг до 00:00':'g90d','Без зайвого телефону':'g5c','Готував сам':'g25e'};
+ {id:'g90d',title:'Стабільний відбій, рух 30 хв щодня',hz:'90 днів',parent:'g5s'},
+ {id:'g90t',title:'Турнік: зафіксувати старт',hz:'90 днів',parent:'g5w'}];
+const GOAL_BY_NAME={'Ранкова зарядка':'g5s','Спина':'p2','Очі':'p2','Вечірня зарядка':'g5s','Силове':'g5w','Прогулянка 10+ хв':'g90d','Читання':'g90a','Англійська':'g5b','Курс / навички':'g90a','Час з Марком':'g5m','Електрика з Марком':'g5m','Сімейне дозвілля':'p1','Допомога по дому':'p1','Щось «для себе»':'p5','Кіно / серіал':'p5','Гра':'p5','Ліг до 00:00':'g90d','Без зайвого телефону':'g5s','Готував сам':'p5'};
 
-let habits=null, goals=null;
+let habits=null, goals=null, goalsV=0;
 const months={};   // 'YYYY-MM' -> {done:{hid:{d:true}}, energy:{d:n}}
 let tab='today', range=4, end=sod(new Date()), day=sod(new Date()), period=30, editing=null, mode='loading';
 let fs=null, uid=null;
@@ -206,8 +209,8 @@ function neededMonths(){
 }
 const goalName=id=>{const g=(goals||[]).find(x=>x.id===id);return g?g.title:''};
 
-function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){habits=c.habits||null;goals=c.goals||null;Object.assign(months,c.months||{})}}catch(e){}}
-function saveCache(){try{localStorage.setItem(LS,JSON.stringify({habits,goals,months}))}catch(e){}}
+function loadCache(){try{const c=JSON.parse(localStorage.getItem(LS)||'null');if(c){habits=c.habits||null;goals=c.goals||null;goalsV=c.goalsV||0;Object.assign(months,c.months||{})}}catch(e){}}
+function saveCache(){try{localStorage.setItem(LS,JSON.stringify({habits,goals,goalsV,months}))}catch(e){}}
 function setStatus(t,on){document.getElementById('status').textContent=t;document.getElementById('dot').classList.toggle('on',!!on)}
 
 /* ---------- header ---------- */
@@ -296,7 +299,7 @@ function vGoals(){
   const node=g=>{const kids=goals.filter(c=>c.parent===g.id);return `<div class="g ${g.hz==='25 років'?'h25':''}"><div class="hz">${esc(g.hz)}</div><div class="gt">${esc(g.title)}</div>${chips(g.id)}${kids.map(node).join('')}</div>`};
   const roots=goals.filter(g=>!g.parent||!goals.some(p=>p.id===g.parent));
   const order=g=>HZ.indexOf(g.hz);
-  return `<div class="card"><h2>Навіщо я це роблю</h2><p class="muted" style="margin:0 0 6px">Ціль → що веде до неї → звички. Цифра — скільки днів за останні 30. Головне джерело — «Стратегія життя» в Notion; тут лише компас.</p>${roots.sort((a,b)=>order(a)-order(b)).map(node).join('')}</div>`+
+  return `<div class="card"><h2>Навіщо я це роблю</h2><p class="muted" style="margin:0 0 6px">Ціль → що веде до неї → звички. Цифра — скільки днів за останні 30. Головне джерело — «Стратегія життя» в Notion (5 стовпів); тут лише компас.</p>${roots.sort((a,b)=>order(a)-order(b)).map(node).join('')}</div>`+
    (habits.some(h=>!h.goal)?`<div class="card"><h2>Звички без цілі</h2><div class="chips">${habits.filter(h=>!h.goal).map(h=>`<span class="chip">${esc(h.name)}</span>`).join('')}</div><p class="muted" style="margin:8px 0 0">Це нормально: не все мусить бути «для чогось».</p></div>`:'');
 }
 function vEditHabits(){
@@ -334,7 +337,7 @@ async function writeSettings(){
   if(mode!=='db')return;
   if(settingsWriting){settingsDirty=true;return}
   settingsWriting=true;
-  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set(JSON.parse(JSON.stringify({habits,goals})))}while(settingsDirty)}
+  try{do{settingsDirty=false;await userDoc().collection('meta').doc('settings').set(JSON.parse(JSON.stringify({habits,goals,goalsV})))}while(settingsDirty)}
   catch(e){setStatus('Не вдалося зберегти ('+(e&&e.code||'помилка')+'). Зміни лишились на цьому пристрої.')}
   settingsWriting=false;
 }
@@ -408,7 +411,7 @@ document.addEventListener('submit',e=>{
 /* ---------- start ---------- */
 loadCache();render();
 function goLocal(msg){mode='local';if(!habits)habits=DEFAULT_HABITS.map(h=>({...h}));migrate();setStatus(msg,false);render()}
-function migrate(){let ch=false;if(!goals){goals=JSON.parse(JSON.stringify(DEFAULT_GOALS));ch=true;habits.forEach(h=>{if(!h.goal&&GOAL_BY_NAME[h.name])h.goal=GOAL_BY_NAME[h.name]})}return ch}
+function migrate(){if(goals&&goalsV>=GOALS_V)return false;goals=JSON.parse(JSON.stringify(DEFAULT_GOALS));goalsV=GOALS_V;habits.forEach(h=>{if(GOAL_BY_NAME[h.name])h.goal=GOAL_BY_NAME[h.name];else if(h.goal&&!goals.some(g=>g.id===h.goal))delete h.goal});return true}
 const cfg=window.FIREBASE_CONFIG;
 if(!cfg||!cfg.apiKey||cfg.apiKey.startsWith('ВСТАВ')){goLocal('Сховище не підключене: дані лише на цьому пристрої.')}
 else{
@@ -436,7 +439,7 @@ else{
     const timer=setTimeout(()=>{if(mode!=='db')setStatus('Немає зв’язку зі сховищем. Відмітки збережуться, коли з’явиться інтернет.',false)},10000);
     unsubSettings=userDoc().collection('meta').doc('settings').onSnapshot(s=>{
       let needWrite=false;
-      if(s.exists){if(!settingsWriting&&!settingsDirty){const d=s.data();habits=(d.habits||[]).map(h=>({...h}));goals=d.goals?d.goals.map(g=>({...g})):null;needWrite=migrate()}}
+      if(s.exists){if(!settingsWriting&&!settingsDirty){const d=s.data();habits=(d.habits||[]).map(h=>({...h}));goals=d.goals?d.goals.map(g=>({...g})):null;goalsV=d.goalsV||(d.goals?1:0);needWrite=migrate()}}
       else if(!s.metadata.fromCache){if(!habits||!habits.length)habits=DEFAULT_HABITS.map(h=>({...h}));goals=null;migrate();needWrite=true}
       if(!s.metadata.fromCache){clearTimeout(timer);mode='db';setStatus('Синхронізується · '+(u.email||''),true)}
       if(needWrite&&mode==='db')writeSettings();
