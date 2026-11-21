@@ -439,7 +439,7 @@ else{
   try{raw=initializeFirestore(app,{localCache:persistentLocalCache({tabManager:persistentSingleTabManager({forceOwnership:true})}),experimentalAutoDetectLongPolling:true},cfg.databaseId||'(default)')}
   catch(e){raw=initializeFirestore(app,{},cfg.databaseId||'(default)')}
   const wrap=s=>({exists:s.exists(),data:()=>s.data(),metadata:s.metadata});
-  const D=ref=>({collection:n=>C(collection(ref,n)),set:d=>setDoc(ref,d),onSnapshot:(n,e)=>onSnapshot(ref,x=>n(wrap(x)),e)});
+  const D=ref=>({collection:n=>C(collection(ref,n)),set:d=>setDoc(ref,d),onSnapshot:(n,e)=>onSnapshot(ref,{includeMetadataChanges:true},x=>n(wrap(x)),e)});
   const C=ref=>({doc:id=>D(doc(ref,id))});
   fs={collection:n=>C(collection(raw,n))};
   const A=getAuth(app), provider=new GoogleAuthProvider();
